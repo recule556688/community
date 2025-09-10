@@ -12,10 +12,8 @@ What guidelines would you want to see to help streamline the experience? Looking
 
 Build Gno in [packages/](./packages).
 Repo steps/improvements (please, work on some!):
-- [ ] Connect the contracts/ folder to the `gnoverse` namespace on Staging
-  - [ ] Figure out how to manage deployer address (maybe via `gnomod.toml`?)
+- [ ] Connect the contracts/ folder to the `gnoverse` namespace on Staging (#4)
 - [ ] Setup basic CI to test p/ & r/ in packages/
 - [ ] Migrate some/most of the personal packages from [examples/](https://github.com/gnolang/gno/tree/master/examples) here.
- Start migrating the process of new examples/ from the monorepo to here.
 
 Getting Started: TODO
