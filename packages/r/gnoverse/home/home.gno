@@ -4,9 +4,7 @@ func Render(_ string) string {
 
 	return `# Gnoverse Home
 
-Welcome gnomes. You could be reading this on-chain, or in the [gnoverse/community](https://github.com/gnoverse/community) 
-repo, under the packages/ folder. 
-
-Please, keep on reading in this package's README on GitHub.`
+Welcome to Gnoverse, gnomes. Check out the [Community Repository](https://github.com/gnoverse/community) for more information.
+`
 
 }
