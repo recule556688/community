@@ -1,6 +1,6 @@
 # Gnoverse Community
 
-Welcome to the Gno.land Community repo. This repo is community-maintained, designed
+Welcome to the Gnoverse Community repo. This repo is community-maintained, designed
 by the community for the community. 
 
 It's a place for you to open issues and PRs for other community members to provide 
