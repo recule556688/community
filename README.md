@@ -1,4 +1,4 @@
-# Gno.land Community
+# Gnoverse Community
 
 Welcome to the Gno.land Community repo. This repo is community-maintained, designed
 by the community for the community. 
@@ -21,8 +21,13 @@ What guidelines would you want to see to help streamline the experience? Looking
 
 Build Gno in [packages/](./packages).
 Repo steps/improvements (please, work on some!):
+- [ ] Setup basic CI to test p/ & r/ in `packages/`
 - [ ] Connect the packages/ folder to the `gnoverse` namespace on Staging (https://github.com/gnoverse/community/issues/4)
-- [ ] Setup basic CI to test p/ & r/ in packages/
 - [ ] Migrate some/most of the personal packages from [examples/](https://github.com/gnolang/gno/tree/master/examples) here.
 
-Getting Started: TODO
+## Using this repo
+
+Please fork this repository and make a PR add your Gno packages to the [`packages/`](./packages) folder,
+following the standard Gno [Package Path Structure](https://docs.gno.land/resources/gno-packages#package-path-structure).
+
+
