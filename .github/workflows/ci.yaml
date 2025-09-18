@@ -49,14 +49,10 @@ jobs:
           cd toolsrepo
           # Install from the tools repo
           go install ./gnovm/cmd/gno
-          go install ./cmd/gfmt
-          go install ./cmd/glint
 
       - name: Verify tools
         run: |
           which gno
-          which gfmt
-          which glint
 
       # --- CI steps on packages ---
       - name: Format check
@@ -71,8 +67,8 @@ jobs:
 
       - name: Lint
         working-directory: packages
-        run: glint ./... || true
+        run: gno lint ./... -v || true
 
       - name: Test
         working-directory: packages
-        run: go test ./... -v
+        run: gno test ./... -v
