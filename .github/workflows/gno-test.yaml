@@ -1,4 +1,4 @@
-name: Gno test
+name: Gno Packages
 
 on:
   push:
@@ -21,7 +21,7 @@ env:
   TOOLS_REF: "master"
 
 jobs:
-  build_and_test:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo
@@ -49,7 +49,7 @@ jobs:
           cd toolsrepo
           # Install from the tools repo
           go install ./gnovm/cmd/gno
-        
+
       - name: Test
         working-directory: packages
         run: gno test ./... -v

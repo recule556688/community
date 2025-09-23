@@ -1,4 +1,4 @@
-name: Gno fmt
+name: Gno Packages
 
 on:
   push:
@@ -21,7 +21,7 @@ env:
   TOOLS_REF: "master"
 
 jobs:
-  build_and_test:
+    format:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo
