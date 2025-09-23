@@ -5,7 +5,99 @@ import (
 	"strings"
 )
 
-// Helper function to convert letter to column number (A=0, B=1, etc.)
+var (
+	// currentGrid holds the current state of the Conway's Game of Life grid
+	currentGrid = NewGrid()
+	// gameEngine handles the game logic and evolution rules
+	gameEngine = NewGameEngine()
+	// patternManager manages predefined patterns that can be loaded into the grid
+	patternManager = NewPatternManager()
+	// renderer handles the display and formatting of the game state
+	renderer = NewRenderer()
+)
+
+// SetCell sets a cell at coordinates (x, y) to alive (true) or dead (false).
+func SetCell(_ realm, x, y int, alive bool) {
+	currentGrid.SetCell(x, y, alive)
+}
+
+// GetCell returns the state of the cell at coordinates (x, y).
+func GetCell(_ realm, x, y int) bool {
+	return currentGrid.GetCell(x, y)
+}
+
+// Step advances the game by one generation according to Conway's rules.
+func Step(_ realm) {
+	currentGrid = gameEngine.Step(currentGrid)
+}
+
+// GetGeneration returns the current generation number.
+func GetGeneration(_ realm) int {
+	return currentGrid.GetGeneration()
+}
+
+// Clear resets the grid to all dead cells.
+func Clear(_ realm) {
+	currentGrid.Clear()
+}
+
+// LoadPattern loads a predefined pattern into the grid at the specified position.
+// Returns true if the pattern was successfully loaded, false otherwise.
+func LoadPattern(_ realm, pattern string, startX, startY int) bool {
+	return patternManager.LoadPattern(currentGrid, pattern, startX, startY)
+}
+
+// GetAvailablePatterns returns a list of available pattern names.
+func GetAvailablePatterns(_ realm) []string {
+	return patternManager.GetAvailablePatterns()
+}
+
+// SetCellAt sets a cell using letter-number coordinates (e.g., "F5").
+// Returns true if the coordinate was valid and the cell was set, false otherwise.
+func SetCellAt(_ realm, coordinate string, alive bool) bool {
+	col, row, valid := parseCoordinate(coordinate)
+	if !valid {
+		return false
+	}
+	currentGrid.SetCell(col, row, alive)
+	return true
+}
+
+// GetCellAt returns the state of a cell using letter-number coordinates (e.g., "F5").
+// Returns the cell state and a boolean indicating if the coordinate was valid.
+func GetCellAt(_ realm, coordinate string) (bool, bool) {
+	col, row, valid := parseCoordinate(coordinate)
+	if !valid {
+		return false, false
+	}
+	return currentGrid.GetCell(col, row), true
+}
+
+// LoadPatternAt loads a pattern using letter-number coordinates (e.g., "F5").
+// Returns true if the coordinate was valid and the pattern was loaded, false otherwise.
+func LoadPatternAt(_ realm, pattern string, coordinate string) bool {
+	col, row, valid := parseCoordinate(coordinate)
+	if !valid {
+		return false
+	}
+	return patternManager.LoadPattern(currentGrid, pattern, col, row)
+}
+
+// Render displays the current state of the game as a formatted string.
+func Render(path string) string {
+	var output strings.Builder
+	
+	output.WriteString("# Conway's Game of Life\n\n")
+	output.WriteString("Generation: " + strconv.Itoa(currentGrid.GetGeneration()) + "\n\n")
+	
+	output.WriteString(renderer.RenderHelp(patternManager))
+	output.WriteString(renderer.RenderGrid(currentGrid))
+	
+	return output.String()
+}
+
+// letterToColumn converts a letter to column number (A=0, B=1, etc.).
+// Returns -1 if the letter is invalid or out of range.
 func letterToColumn(letter string) int {
 	if len(letter) == 0 {
 		return -1
@@ -19,7 +111,8 @@ func letterToColumn(letter string) int {
 	return col
 }
 
-// Helper function to convert column number to letter (0=A, 1=B, etc.)
+// columnToLetter converts a column number to letter (0=A, 1=B, etc.).
+// Returns an empty string if the column is out of range.
 func columnToLetter(col int) string {
 	if col < 0 || col >= GRID_WIDTH {
 		return ""
@@ -27,91 +120,8 @@ func columnToLetter(col int) string {
 	return string(rune('A' + col))
 }
 
-// Global game state
-var (
-	currentGrid    *Grid
-	gameEngine     *GameEngine
-	patternManager *PatternManager
-	renderer       *Renderer
-)
-
-// Initialize the game components
-func init() {
-	currentGrid = NewGrid()
-	gameEngine = NewGameEngine()
-	patternManager = NewPatternManager()
-	renderer = NewRenderer()
-}
-
-// NewGame initializes a new Conway's Game of Life with an empty grid
-func NewGame(_ realm) {
-	currentGrid = NewGrid()
-}
-
-// SetCell sets a cell to alive (true) or dead (false)
-func SetCell(_ realm, x, y int, alive bool) {
-	currentGrid.SetCell(x, y, alive)
-}
-
-// GetCell returns the state of a cell
-func GetCell(_ realm, x, y int) bool {
-	return currentGrid.GetCell(x, y)
-}
-
-// Step advances the game by one generation according to Conway's rules
-func Step(_ realm) {
-	currentGrid = gameEngine.Step(currentGrid)
-}
-
-// GetGeneration returns the current generation number
-func GetGeneration(_ realm) int {
-	return currentGrid.GetGeneration()
-}
-
-// Clear resets the grid to all dead cells
-func Clear(_ realm) {
-	currentGrid.Clear()
-}
-
-// LoadPattern loads a predefined pattern into the grid at the specified position
-func LoadPattern(_ realm, pattern string, startX, startY int) bool {
-	return patternManager.LoadPattern(currentGrid, pattern, startX, startY)
-}
-
-// GetAvailablePatterns returns a list of available pattern names
-func GetAvailablePatterns(_ realm) []string {
-	return patternManager.GetAvailablePatterns()
-}
-
-// SetCellAt sets a cell using letter-number coordinates (e.g., "F5")
-func SetCellAt(_ realm, coordinate string, alive bool) bool {
-	col, row, valid := parseCoordinate(coordinate)
-	if !valid {
-		return false
-	}
-	currentGrid.SetCell(col, row, alive)
-	return true
-}
-
-// GetCellAt returns the state of a cell using letter-number coordinates (e.g., "F5")
-func GetCellAt(_ realm, coordinate string) (bool, bool) {
-	col, row, valid := parseCoordinate(coordinate)
-	if !valid {
-		return false, false
-	}
-	return currentGrid.GetCell(col, row), true
-}
-
-// LoadPatternAt loads a pattern using letter-number coordinates (e.g., "F5")
-func LoadPatternAt(_ realm, pattern string, coordinate string) bool {
-	col, row, valid := parseCoordinate(coordinate)
-	if !valid {
-		return false
-	}
-	return patternManager.LoadPattern(currentGrid, pattern, col, row)
-}
-
-// Helper function to parse coordinates like "F5" into column and row numbers
+// parseCoordinate parses coordinates like "F5" into column and row numbers.
+// Returns the column, row, and a boolean indicating if the coordinate was valid.
 func parseCoordinate(coordinate string) (int, int, bool) {
 	if len(coordinate) < 2 {
 		return -1, -1, false
@@ -134,17 +144,4 @@ func parseCoordinate(coordinate string) (int, int, bool) {
 	}
 	
 	return col, row, true
-}
-
-// Render displays the current state of the game
-func Render(path string) string {
-	var output strings.Builder
-	
-	output.WriteString("# Conway's Game of Life\n\n")
-	output.WriteString("Generation: " + strconv.Itoa(currentGrid.GetGeneration()) + "\n\n")
-	
-	output.WriteString(renderer.RenderHelp(patternManager))
-	output.WriteString(renderer.RenderGrid(currentGrid))
-	
-	return output.String()
 }
