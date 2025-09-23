@@ -4,6 +4,7 @@ import (
 	"testing"
 )
 
+// TestGridCreation tests the creation and initial state of a new grid.
 func TestGridCreation(t *testing.T) {
 	// Test that we can create a new grid
 	grid := NewGrid()
@@ -17,6 +18,7 @@ func TestGridCreation(t *testing.T) {
 	}
 }
 
+// TestGameEngineCreation tests the creation of a new game engine instance.
 func TestGameEngineCreation(t *testing.T) {
 	// Test that we can create a game engine
 	engine := NewGameEngine()
@@ -25,6 +27,7 @@ func TestGameEngineCreation(t *testing.T) {
 	}
 }
 
+// TestPatternManagerCreation tests the creation and initialization of a pattern manager.
 func TestPatternManagerCreation(t *testing.T) {
 	// Test that we can create a pattern manager
 	pm := NewPatternManager()
@@ -39,6 +42,7 @@ func TestPatternManagerCreation(t *testing.T) {
 	}
 }
 
+// TestRendererCreation tests the creation of a new renderer instance.
 func TestRendererCreation(t *testing.T) {
 	// Test that we can create a renderer
 	r := NewRenderer()

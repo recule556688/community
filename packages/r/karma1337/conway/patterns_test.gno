@@ -4,6 +4,7 @@ import (
 	"testing"
 )
 
+// TestPatternManagerInitialization tests the creation and initialization of a pattern manager.
 func TestPatternManagerInitialization(t *testing.T) {
 	pm := NewPatternManager()
 	if pm == nil {
@@ -17,6 +18,7 @@ func TestPatternManagerInitialization(t *testing.T) {
 	}
 }
 
+// TestPatternLoading tests loading valid patterns into a grid.
 func TestPatternLoading(t *testing.T) {
 	pm := NewPatternManager()
 	grid := NewGrid()
@@ -33,6 +35,7 @@ func TestPatternLoading(t *testing.T) {
 	}
 }
 
+// TestInvalidPatternLoading tests loading non-existent patterns and verifies proper error handling.
 func TestInvalidPatternLoading(t *testing.T) {
 	pm := NewPatternManager()
 	grid := NewGrid()
@@ -44,6 +47,7 @@ func TestInvalidPatternLoading(t *testing.T) {
 	}
 }
 
+// TestBlinkerPatternExists tests the availability and loading of the blinker pattern.
 func TestBlinkerPatternExists(t *testing.T) {
 	pm := NewPatternManager()
 	patterns := pm.GetAvailablePatterns()

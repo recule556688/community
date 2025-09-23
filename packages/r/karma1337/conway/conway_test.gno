@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-// Test helper functions and coordinate parsing
+// TestCoordinateParsing tests the parseCoordinate function with valid and invalid inputs.
 func TestCoordinateParsing(t *testing.T) {
 	// Test valid coordinate parsing
 	col, row, valid := parseCoordinate("F5")
@@ -27,6 +27,7 @@ func TestCoordinateParsing(t *testing.T) {
 	}
 }
 
+// TestLetterColumnConversion tests the letterToColumn and columnToLetter conversion functions.
 func TestLetterColumnConversion(t *testing.T) {
 	// Test letter to column conversion
 	col := letterToColumn("A")

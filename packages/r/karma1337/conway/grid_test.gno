@@ -4,6 +4,7 @@ import (
 	"testing"
 )
 
+// TestGridOperations tests basic grid operations including cell setting and getting.
 func TestGridOperations(t *testing.T) {
 	// Test basic grid operations
 	grid := NewGrid()
@@ -23,6 +24,7 @@ func TestGridOperations(t *testing.T) {
 	}
 }
 
+// TestGridGeneration tests generation tracking and incrementing functionality.
 func TestGridGeneration(t *testing.T) {
 	grid := NewGrid()
 	
@@ -38,6 +40,7 @@ func TestGridGeneration(t *testing.T) {
 	}
 }
 
+// TestGridClear tests the grid clearing functionality and state reset.
 func TestGridClear(t *testing.T) {
 	grid := NewGrid()
 	

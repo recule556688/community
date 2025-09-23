@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+// TestNewRenderer tests the creation of a new renderer instance.
 func TestNewRenderer(t *testing.T) {
 	renderer := NewRenderer()
 	if renderer == nil {
@@ -12,6 +13,7 @@ func TestNewRenderer(t *testing.T) {
 	}
 }
 
+// TestRenderGrid tests the grid rendering functionality with empty and populated grids.
 func TestRenderGrid(t *testing.T) {
 	renderer := NewRenderer()
 	grid := NewGrid()
@@ -37,6 +39,7 @@ func TestRenderGrid(t *testing.T) {
 	}
 }
 
+// TestRenderHelp tests the help text rendering functionality.
 func TestRenderHelp(t *testing.T) {
 	renderer := NewRenderer()
 	patternManager := NewPatternManager()
@@ -52,6 +55,7 @@ func TestRenderHelp(t *testing.T) {
 	}
 }
 
+// TestMainRenderFunction tests the main Render function that combines all output elements.
 func TestMainRenderFunction(t *testing.T) {
 	// Test the main Render function
 	output := Render("")
