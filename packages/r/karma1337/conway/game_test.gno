@@ -11,7 +11,7 @@ func TestGridCreation(t *testing.T) {
 	if grid == nil {
 		t.Error("Expected NewGrid to return a non-nil grid")
 	}
-	
+
 	// Test initial state
 	if grid.GetCell(0, 0) {
 		t.Error("Expected new grid cells to be dead initially")
@@ -34,7 +34,7 @@ func TestPatternManagerCreation(t *testing.T) {
 	if pm == nil {
 		t.Error("Expected NewPatternManager to return a non-nil pattern manager")
 	}
-	
+
 	// Test that it has some patterns
 	patterns := pm.GetAvailablePatterns()
 	if len(patterns) == 0 {

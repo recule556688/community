@@ -16,9 +16,9 @@ func NewRenderer() *Renderer {
 // RenderGrid converts the grid state to a visual string representation.
 func (r *Renderer) RenderGrid(grid *Grid) string {
 	var output strings.Builder
-	
+
 	output.WriteString("\n```\n") // Start code block for proper monospace rendering
-	
+
 	// Grid header with column letters (A-T for 20 columns)
 	output.WriteString("   ")
 	for x := 0; x < GRID_WIDTH; x++ {
@@ -26,7 +26,7 @@ func (r *Renderer) RenderGrid(grid *Grid) string {
 		output.WriteString(letter + " ")
 	}
 	output.WriteString("\n")
-	
+
 	// Grid content
 	for y := 0; y < GRID_HEIGHT; y++ {
 		// Row number with proper spacing
@@ -35,7 +35,7 @@ func (r *Renderer) RenderGrid(grid *Grid) string {
 		} else {
 			output.WriteString(strconv.Itoa(y) + " ")
 		}
-		
+
 		// Cells with spaces between them
 		for x := 0; x < GRID_WIDTH; x++ {
 			if grid.GetCell(x, y) {
@@ -46,16 +46,16 @@ func (r *Renderer) RenderGrid(grid *Grid) string {
 		}
 		output.WriteString("\n")
 	}
-	
+
 	output.WriteString("```\n") // End code block
-	
+
 	return output.String()
 }
 
 // RenderHelp generates the help/action text including available commands and patterns.
 func (r *Renderer) RenderHelp(patternManager *PatternManager) string {
 	var output strings.Builder
-	
+
 	output.WriteString("Actions:\n")
 	output.WriteString("* [NewGame](conway$help&func=NewGame) - Start a new game\n")
 	output.WriteString("* [Step](conway$help&func=Step) - Advance one generation (high gas usage!)\n")
@@ -65,7 +65,7 @@ func (r *Renderer) RenderHelp(patternManager *PatternManager) string {
 	output.WriteString("* [LoadPattern](conway$help&func=LoadPattern) pattern x y - Load pattern using numeric coordinates\n")
 	output.WriteString("* [LoadPatternAt](conway$help&func=LoadPatternAt) pattern coordinate - Load pattern using letter coordinates\n")
 	output.WriteString("* [Clear](conway$help&func=Clear) - Clear the grid\n\n")
-	
+
 	output.WriteString("Example commands (use --broadcast for single-step execution):\n")
 	output.WriteString("```\n")
 	output.WriteString("# Start new game\n")
@@ -77,7 +77,7 @@ func (r *Renderer) RenderHelp(patternManager *PatternManager) string {
 	output.WriteString("# Set cell at (5,5) to alive (using numeric coordinates)\n")
 	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/demo/games/conway\" -func \"SetCell\" -args \"5\" -args \"5\" -args \"true\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n")
 	output.WriteString("```\n\n")
-	
+
 	// List available patterns
 	patterns := patternManager.GetAvailablePatterns()
 	output.WriteString("Available patterns: ")
@@ -88,6 +88,6 @@ func (r *Renderer) RenderHelp(patternManager *PatternManager) string {
 		output.WriteString(pattern)
 	}
 	output.WriteString("\n\n")
-	
+
 	return output.String()
 }

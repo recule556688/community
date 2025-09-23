@@ -10,7 +10,7 @@ func TestPatternManagerInitialization(t *testing.T) {
 	if pm == nil {
 		t.Error("Expected NewPatternManager to return a non-nil pattern manager")
 	}
-	
+
 	// Test that we have available patterns
 	patterns := pm.GetAvailablePatterns()
 	if len(patterns) == 0 {
@@ -22,12 +22,12 @@ func TestPatternManagerInitialization(t *testing.T) {
 func TestPatternLoading(t *testing.T) {
 	pm := NewPatternManager()
 	grid := NewGrid()
-	
+
 	patterns := pm.GetAvailablePatterns()
 	if len(patterns) == 0 {
 		t.Skip("No patterns available to test")
 	}
-	
+
 	// Test loading the first available pattern
 	success := pm.LoadPattern(grid, patterns[0], 5, 5)
 	if !success {
@@ -39,7 +39,7 @@ func TestPatternLoading(t *testing.T) {
 func TestInvalidPatternLoading(t *testing.T) {
 	pm := NewPatternManager()
 	grid := NewGrid()
-	
+
 	// Test loading a non-existent pattern
 	success := pm.LoadPattern(grid, "nonexistent_pattern", 5, 5)
 	if success {
@@ -51,7 +51,7 @@ func TestInvalidPatternLoading(t *testing.T) {
 func TestBlinkerPatternExists(t *testing.T) {
 	pm := NewPatternManager()
 	patterns := pm.GetAvailablePatterns()
-	
+
 	// Check if blinker pattern exists
 	found := false
 	for _, pattern := range patterns {
@@ -60,7 +60,7 @@ func TestBlinkerPatternExists(t *testing.T) {
 			break
 		}
 	}
-	
+
 	if found {
 		// Test loading blinker pattern
 		grid := NewGrid()

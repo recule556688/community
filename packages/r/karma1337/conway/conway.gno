@@ -86,13 +86,13 @@ func LoadPatternAt(_ realm, pattern string, coordinate string) bool {
 // Render displays the current state of the game as a formatted string.
 func Render(path string) string {
 	var output strings.Builder
-	
+
 	output.WriteString("# Conway's Game of Life\n\n")
 	output.WriteString("Generation: " + strconv.Itoa(currentGrid.GetGeneration()) + "\n\n")
-	
+
 	output.WriteString(renderer.RenderHelp(patternManager))
 	output.WriteString(renderer.RenderGrid(currentGrid))
-	
+
 	return output.String()
 }
 
@@ -126,22 +126,22 @@ func parseCoordinate(coordinate string) (int, int, bool) {
 	if len(coordinate) < 2 {
 		return -1, -1, false
 	}
-	
+
 	// Extract letter part and number part
 	letter := coordinate[:1]
 	numberStr := coordinate[1:]
-	
+
 	// Convert letter to column
 	col := letterToColumn(letter)
 	if col == -1 {
 		return -1, -1, false
 	}
-	
+
 	// Convert number string to row
 	row, err := strconv.Atoi(numberStr)
 	if err != nil || row < 0 || row >= GRID_HEIGHT {
 		return -1, -1, false
 	}
-	
+
 	return col, row, true
 }

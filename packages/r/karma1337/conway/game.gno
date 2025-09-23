@@ -41,7 +41,7 @@ func (ge *GameEngine) ApplyRules(isAlive bool, neighborCount int) bool {
 func (ge *GameEngine) Step(grid *Grid) *Grid {
 	newGrid := NewGrid()
 	newGrid.generation = grid.generation + 1
-	
+
 	for y := 0; y < GRID_HEIGHT; y++ {
 		for x := 0; x < GRID_WIDTH; x++ {
 			neighbors := ge.CountNeighbors(grid, x, y)
@@ -49,6 +49,6 @@ func (ge *GameEngine) Step(grid *Grid) *Grid {
 			newGrid.SetCell(x, y, ge.ApplyRules(alive, neighbors))
 		}
 	}
-	
+
 	return newGrid
 }
