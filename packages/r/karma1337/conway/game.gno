@@ -1,14 +1,14 @@
 package conway
 
-// GameEngine handles the core Conway's Game of Life logic
+// GameEngine handles the core Conway's Game of Life logic.
 type GameEngine struct{}
 
-// NewGameEngine creates a new game engine
+// NewGameEngine creates a new game engine instance.
 func NewGameEngine() *GameEngine {
 	return &GameEngine{}
 }
 
-// CountNeighbors counts the number of living neighbors for a cell
+// CountNeighbors counts the number of living neighbors for a cell at coordinates (x, y).
 func (ge *GameEngine) CountNeighbors(grid *Grid, x, y int) int {
 	count := 0
 	for dy := -1; dy <= 1; dy++ {
@@ -24,7 +24,8 @@ func (ge *GameEngine) CountNeighbors(grid *Grid, x, y int) int {
 	return count
 }
 
-// ApplyRules applies Conway's Game of Life rules to determine next cell state
+// ApplyRules applies Conway's Game of Life rules to determine the next cell state.
+// Returns true if the cell should be alive in the next generation, false otherwise.
 func (ge *GameEngine) ApplyRules(isAlive bool, neighborCount int) bool {
 	// Conway's Game of Life rules:
 	// 1. Any live cell with 2-3 live neighbors survives
@@ -36,7 +37,7 @@ func (ge *GameEngine) ApplyRules(isAlive bool, neighborCount int) bool {
 	return neighborCount == 3
 }
 
-// Step advances the game by one generation
+// Step advances the game by one generation and returns the new grid state.
 func (ge *GameEngine) Step(grid *Grid) *Grid {
 	newGrid := NewGrid()
 	newGrid.generation = grid.generation + 1
