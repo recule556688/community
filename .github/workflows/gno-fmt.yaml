@@ -1,4 +1,4 @@
-name: CI
+name: Gno fmt
 
 on:
   push:
@@ -50,11 +50,6 @@ jobs:
           # Install from the tools repo
           go install ./gnovm/cmd/gno
 
-      - name: Verify tools
-        run: |
-          which gno
-
-      # --- CI steps on packages ---
       - name: Format check
         working-directory: packages
         run: |
@@ -64,11 +59,3 @@ jobs:
             echo "$UNFORMATTED"
             exit 1
           fi
-
-      - name: Lint
-        working-directory: packages
-        run: gno lint ./... -v || true
-
-      - name: Test
-        working-directory: packages
-        run: gno test ./... -v
