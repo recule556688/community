@@ -5,15 +5,15 @@ import (
 	"strings"
 )
 
-// Renderer handles the display of the game state
+// Renderer handles the display of the game state.
 type Renderer struct{}
 
-// NewRenderer creates a new renderer
+// NewRenderer creates a new renderer instance.
 func NewRenderer() *Renderer {
 	return &Renderer{}
 }
 
-// RenderGrid converts the grid state to a visual string representation
+// RenderGrid converts the grid state to a visual string representation.
 func (r *Renderer) RenderGrid(grid *Grid) string {
 	var output strings.Builder
 	
@@ -52,7 +52,7 @@ func (r *Renderer) RenderGrid(grid *Grid) string {
 	return output.String()
 }
 
-// RenderHelp generates the help/action text
+// RenderHelp generates the help/action text including available commands and patterns.
 func (r *Renderer) RenderHelp(patternManager *PatternManager) string {
 	var output strings.Builder
 	
