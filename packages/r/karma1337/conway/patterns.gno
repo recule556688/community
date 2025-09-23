@@ -1,17 +1,17 @@
 package conway
 
-// Pattern represents a Conway's Game of Life pattern
+// Pattern represents a Conway's Game of Life pattern with a name and cell configuration.
 type Pattern struct {
-	Name string
+	Name  string
 	Cells [][]bool
 }
 
-// PatternManager handles pattern definitions and operations
+// PatternManager handles pattern definitions and operations.
 type PatternManager struct {
 	patterns map[string]Pattern
 }
 
-// NewPatternManager creates a new pattern manager with predefined patterns
+// NewPatternManager creates a new pattern manager with predefined patterns.
 func NewPatternManager() *PatternManager {
 	pm := &PatternManager{
 		patterns: make(map[string]Pattern),
@@ -20,7 +20,7 @@ func NewPatternManager() *PatternManager {
 	return pm
 }
 
-// initializePatterns loads all predefined patterns
+// initializePatterns loads all predefined patterns into the pattern manager.
 func (pm *PatternManager) initializePatterns() {
 	// Still Life patterns
 	pm.patterns["block"] = Pattern{
@@ -38,7 +38,7 @@ func (pm *PatternManager) initializePatterns() {
 			{true, true, true},
 		},
 	}
-
+	// Toad pattern
 	pm.patterns["toad"] = Pattern{
 		Name: "Toad",
 		Cells: [][]bool{
@@ -46,7 +46,7 @@ func (pm *PatternManager) initializePatterns() {
 			{true, true, true, false},
 		},
 	}
-
+	// Beacon pattern
 	pm.patterns["beacon"] = Pattern{
 		Name: "Beacon",
 		Cells: [][]bool{
@@ -67,7 +67,7 @@ func (pm *PatternManager) initializePatterns() {
 		},
 	}
 
-	// More complex patterns
+	// Pulsar pattern
 	pm.patterns["pulsar"] = Pattern{
 		Name: "Pulsar",
 		Cells: [][]bool{
@@ -88,13 +88,14 @@ func (pm *PatternManager) initializePatterns() {
 	}
 }
 
-// GetPattern returns a pattern by name
+// GetPattern returns a pattern by name and a boolean indicating if it exists.
 func (pm *PatternManager) GetPattern(name string) (Pattern, bool) {
 	pattern, exists := pm.patterns[name]
 	return pattern, exists
 }
 
-// LoadPattern loads a pattern into the grid at the specified position
+// LoadPattern loads a pattern into the grid at the specified position.
+// Returns true if the pattern was successfully loaded, false if the pattern doesn't exist.
 func (pm *PatternManager) LoadPattern(grid *Grid, patternName string, startX, startY int) bool {
 	pattern, exists := pm.GetPattern(patternName)
 	if !exists {
@@ -109,7 +110,7 @@ func (pm *PatternManager) LoadPattern(grid *Grid, patternName string, startX, st
 	return true
 }
 
-// GetAvailablePatterns returns a list of available pattern names
+// GetAvailablePatterns returns a list of all available pattern names.
 func (pm *PatternManager) GetAvailablePatterns() []string {
 	var patterns []string
 	for name := range pm.patterns {
