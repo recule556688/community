@@ -1,6 +1,6 @@
 name: Test Conway Package
 
-on:
+"on":
   push:
     branches: [ main ]
     paths: [ 'packages/r/karma1337/conway/**' ]
