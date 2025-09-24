@@ -20,7 +20,7 @@ env:
 
 
 jobs:
-  lint:
+  fmt:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo
