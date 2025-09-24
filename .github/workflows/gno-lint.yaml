@@ -33,23 +33,20 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Expose GOBIN on PATH
-        run: echo "${GOBIN}" >> "$GITHUB_PATH"
+      - name: Ensure deps are downloaded
+        run: go mod download
 
-      - name: Checkout tools repo
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.TOOLS_REPO }}
-          ref: ${{ env.TOOLS_REF }}   # master, latest commit
-          path: toolsrepo
-          fetch-depth: 1              # only latest commit
-
-      - name: Install tools
+      - name: Read pinned Gno version from go.mod
+        id: gnoversion
         run: |
-          cd toolsrepo
-          # Install from the tools repo
-          go install ./gnovm/cmd/gno
+          V=$(go list -m -f '{{.Version}}' github.com/gnolang/gno)
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Install gno
+        run: |
+          go install github.com/gnolang/gno/gnovm/cmd/gno@${{ steps.gnoversion.outputs.version }}
+          gno version
 
       - name: Lint
         working-directory: packages
-        run: gno lint ./... -v || true
+        run: gno lint ./... -v
