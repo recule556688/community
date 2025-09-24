@@ -36,6 +36,9 @@ jobs:
       - name: Ensure deps are downloaded
         run: go mod download
 
+      - name: Put $GOBIN on PATH
+        run: echo "${GOBIN}" >> "$GITHUB_PATH"
+
       - name: Read pinned Gno version from go.mod
         id: gnoversion
         run: |
