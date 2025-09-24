@@ -17,8 +17,6 @@ permissions:
 env:
   GO_VERSION: "1.23.x"
   GOBIN: ${{ github.workspace }}/bin
-  TOOLS_REPO: "gnolang/gno"
-  TOOLS_REF: "master"
 
 jobs:
   lint:
