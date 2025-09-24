@@ -21,7 +21,7 @@ env:
   TOOLS_REF: "master"
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo
@@ -33,19 +33,22 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Checkout tools repo
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.TOOLS_REPO }}
-          ref: ${{ env.TOOLS_REF }}   # master, latest commit
-          path: toolsrepo
-          fetch-depth: 1              # only latest commit
+      - name: Ensure deps are downloaded
+        run: go mod download
 
-      - name: Install tools
+      - name: Put $GOBIN on PATH
+        run: echo "${GOBIN}" >> "$GITHUB_PATH"
+
+      - name: Read pinned Gno version from go.mod
+        id: gnoversion
         run: |
-          cd toolsrepo
-          # Install from the tools repo
-          go install ./gnovm/cmd/gno
+          V=$(go list -m -f '{{.Version}}' github.com/gnolang/gno)
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Install gno
+        run: |
+          go install github.com/gnolang/gno/gnovm/cmd/gno@${{ steps.gnoversion.outputs.version }}
+          gno version
 
       - name: Test
         working-directory: packages
