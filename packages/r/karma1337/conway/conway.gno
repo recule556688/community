@@ -8,6 +8,8 @@ import (
 var (
 	// currentGrid holds the current state of the Conway's Game of Life grid
 	currentGrid = NewGrid()
+	// tempGrid is a reusable grid to avoid memory allocation on each step
+	tempGrid = NewGrid()
 	// gameEngine handles the game logic and evolution rules
 	gameEngine = NewGameEngine()
 	// patternManager manages predefined patterns that can be loaded into the grid
@@ -28,7 +30,9 @@ func GetCell(_ realm, x, y int) bool {
 
 // Step advances the game by one generation according to Conway's rules.
 func Step(_ realm) {
-	currentGrid = gameEngine.Step(currentGrid)
+	gameEngine.StepInPlace(currentGrid, tempGrid)
+	// Swap the grids to avoid copying
+	currentGrid, tempGrid = tempGrid, currentGrid
 }
 
 // GetGeneration returns the current generation number.
