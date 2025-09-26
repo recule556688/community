@@ -24,6 +24,30 @@ func (ge *GameEngine) CountNeighbors(grid *Grid, x, y int) int {
 	return count
 }
 
+// countNeighborsOptimized is an optimized version that avoids function call overhead
+// and bounds checking by accessing the cells array directly.
+func (ge *GameEngine) countNeighborsOptimized(grid *Grid, x, y int) int {
+	count := 0
+	
+	// Check all 8 neighbors with bounds checking optimized
+	for dy := -1; dy <= 1; dy++ {
+		for dx := -1; dx <= 1; dx++ {
+			if dx == 0 && dy == 0 {
+				continue // Skip the cell itself
+			}
+			
+			nx, ny := x+dx, y+dy
+			// Inline bounds check for better performance
+			if nx >= 0 && nx < GRID_WIDTH && ny >= 0 && ny < GRID_HEIGHT {
+				if grid.Cells[ny][nx] {
+					count++
+				}
+			}
+		}
+	}
+	return count
+}
+
 // ApplyRules applies Conway's Game of Life rules to determine the next cell state.
 // Returns true if the cell should be alive in the next generation, false otherwise.
 func (ge *GameEngine) ApplyRules(isAlive bool, neighborCount int) bool {
@@ -42,13 +66,29 @@ func (ge *GameEngine) Step(grid *Grid) *Grid {
 	newGrid := NewGrid()
 	newGrid.generation = grid.generation + 1
 
+	// Optimize by accessing cells array directly to avoid function call overhead
 	for y := 0; y < GRID_HEIGHT; y++ {
 		for x := 0; x < GRID_WIDTH; x++ {
-			neighbors := ge.CountNeighbors(grid, x, y)
-			alive := grid.GetCell(x, y)
-			newGrid.SetCell(x, y, ge.ApplyRules(alive, neighbors))
+			neighbors := ge.countNeighborsOptimized(grid, x, y)
+			alive := grid.Cells[y][x]
+			newGrid.Cells[y][x] = ge.ApplyRules(alive, neighbors)
 		}
 	}
 
 	return newGrid
+}
+
+// StepInPlace advances the game by one generation using pre-allocated grids to reduce memory allocation.
+// The result is stored in the newGrid parameter, and the source grid is preserved.
+func (ge *GameEngine) StepInPlace(sourceGrid, newGrid *Grid) {
+	newGrid.generation = sourceGrid.generation + 1
+
+	// Optimize by accessing cells array directly to avoid function call overhead
+	for y := 0; y < GRID_HEIGHT; y++ {
+		for x := 0; x < GRID_WIDTH; x++ {
+			neighbors := ge.countNeighborsOptimized(sourceGrid, x, y)
+			alive := sourceGrid.Cells[y][x]
+			newGrid.Cells[y][x] = ge.ApplyRules(alive, neighbors)
+		}
+	}
 }
