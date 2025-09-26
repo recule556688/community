@@ -19,10 +19,10 @@ gno.land/r/karma1337/conway
 
 ## Usage
 
-### Starting a New Game
+### Clearing the Grid
 
 ```bash
-gnokey maketx call -pkgpath "gno.land/r/karma1337/conway" -func "NewGame" -gas-fee 1000000ugnot -gas-wanted 5000000 -send "" --broadcast [your-key]
+gnokey maketx call -pkgpath "gno.land/r/karma1337/conway" -func "Clear" -gas-fee 1000000ugnot -gas-wanted 5000000 -send "" --broadcast [your-key]
 ```
 
 ### Setting Individual Cells
@@ -75,7 +75,6 @@ gnokey query vm/qrender -data "gno.land/r/karma1337/conway"
 
 ### Game Management Functions
 
-- `NewGame()` - Initialize a new empty 10x10 grid
 - `Step()` - Advance the game by one generation
 - `Clear()` - Reset the grid to empty state
 
@@ -100,15 +99,15 @@ gnokey query vm/qrender -data "gno.land/r/karma1337/conway"
 ## Coordinate Systems
 
 ### Numeric Coordinates
-- x: 0-9 (columns, left to right)
-- y: 0-9 (rows, top to bottom)
-- Example: `(5, 5)` is the center cell
+- x: 0-19 (columns, left to right)
+- y: 0-19 (rows, top to bottom)
+- Example: `(10, 10)` is near the center
 
 ### Letter Coordinates
-- Columns: A-J (left to right)
-- Rows: 1-10 (top to bottom)  
-- Example: `"F5"` is the center cell
-- Case insensitive: `"f5"` and `"F5"` are equivalent
+- Columns: A-T (left to right, 20 columns)
+- Rows: 0-19 (top to bottom, 20 rows)  
+- Example: `"K10"` is near the center
+- Case insensitive: `"k10"` and `"K10"` are equivalent
 
 ## Available Patterns
 
@@ -147,21 +146,21 @@ Conway's Game of Life follows these simple rules:
 ## Grid Display
 
 The web interface displays the grid with:
-- Capital letters (A-J) for column headers
-- Numbers (1-10) for row headers
-- `#` for alive cells
+- Capital letters (A-T) for column headers (20 columns)
+- Numbers (0-19) for row headers (20 rows)
+- `●` for alive cells
 - `.` for dead cells
 - Proper spacing for readability
 
 Example display:
 ```
-   A B C D E F G H I J
-1  . . . . . . . . . .
-2  . . . . . . . . . .
-3  . . # . . . . . . .
-4  . . . # . . . . . .
-5  . # # # . . . . . .
-6  . . . . . . . . . .
+   A B C D E F G H I J K L M N O P Q R S T
+0  . . . . . . . . . . . . . . . . . . . .
+1  . . . . . . . . . . . . . . . . . . . .
+2  . . ● . . . . . . . . . . . . . . . . .
+3  . . . ● . . . . . . . . . . . . . . . .
+4  . ● ● ● . . . . . . . . . . . . . . . .
+5  . . . . . . . . . . . . . . . . . . . .
 ...
 ```
 
