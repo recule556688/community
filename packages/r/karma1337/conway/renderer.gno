@@ -57,8 +57,7 @@ func (r *Renderer) RenderHelp(patternManager *PatternManager) string {
 	var output strings.Builder
 
 	output.WriteString("Actions:\n")
-	output.WriteString("* [NewGame](conway$help&func=NewGame) - Start a new game\n")
-	output.WriteString("* [Step](conway$help&func=Step) - Advance one generation (high gas usage!)\n")
+	output.WriteString("* [Step](conway$help&func=Step) - Advance one generation (optimized for lower gas usage)\n")
 	output.WriteString("* [SetCell](conway$help&func=SetCell) x y alive - Set cell state using numbers (alive: true/false)\n")
 	output.WriteString("* [SetCellAt](conway$help&func=SetCellAt) coordinate alive - Set cell using letter coordinates (e.g., F5)\n")
 	output.WriteString("* [GetCellAt](conway$help&func=GetCellAt) coordinate - Get cell state using letter coordinates\n")
@@ -68,8 +67,8 @@ func (r *Renderer) RenderHelp(patternManager *PatternManager) string {
 
 	output.WriteString("Example commands (use --broadcast for single-step execution):\n")
 	output.WriteString("```\n")
-	output.WriteString("# Start new game\n")
-	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/demo/games/conway\" -func \"NewGame\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n\n")
+	output.WriteString("# Clear the grid\n")
+	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/karma1337/conway\" -func \"Clear\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n\n")
 	output.WriteString("# Set cell at F5 to alive (using letter coordinates)\n")
 	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/demo/games/conway\" -func \"SetCellAt\" -args \"F5\" -args \"true\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n\n")
 	output.WriteString("# Load blinker pattern at F5 (using letter coordinates)\n")
