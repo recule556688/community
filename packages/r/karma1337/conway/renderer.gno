@@ -70,11 +70,11 @@ func (r *Renderer) RenderHelp(patternManager *PatternManager) string {
 	output.WriteString("# Clear the grid\n")
 	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/karma1337/conway\" -func \"Clear\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n\n")
 	output.WriteString("# Set cell at F5 to alive (using letter coordinates)\n")
-	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/demo/games/conway\" -func \"SetCellAt\" -args \"F5\" -args \"true\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n\n")
+	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/karma1337/conway\" -func \"SetCellAt\" -args \"F5\" -args \"true\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n\n")
 	output.WriteString("# Load blinker pattern at F5 (using letter coordinates)\n")
-	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/demo/games/conway\" -func \"LoadPatternAt\" -args \"blinker\" -args \"F5\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n\n")
+	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/karma1337/conway\" -func \"LoadPatternAt\" -args \"blinker\" -args \"F5\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n\n")
 	output.WriteString("# Set cell at (5,5) to alive (using numeric coordinates)\n")
-	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/demo/games/conway\" -func \"SetCell\" -args \"5\" -args \"5\" -args \"true\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n")
+	output.WriteString("gnokey maketx call -pkgpath \"gno.land/r/karma1337/conway\" -func \"SetCell\" -args \"5\" -args \"5\" -args \"true\" -gas-fee 1000000ugnot -gas-wanted 5000000 -send \"\" --broadcast ADDRESS\n")
 	output.WriteString("```\n\n")
 
 	// List available patterns
