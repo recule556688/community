@@ -2,7 +2,7 @@ name: Gno Packages
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main ]
     paths:
       - "packages/**"
       - ".github/workflows/**"
