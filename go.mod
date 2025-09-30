@@ -1,4 +1,4 @@
-module your/module
+module community
 
 go 1.23.0
 
