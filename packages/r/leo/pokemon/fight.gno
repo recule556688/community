@@ -1,8 +1,9 @@
 package pokemon
 
 import (
+	"chain/runtime"
 	"errors"
-	"std"
+	"github.com/gnolang/gno/gnovm/stdlibs/std"
 	"strconv"
 
 	"gno.land/p/moul/md"
@@ -262,7 +263,7 @@ func initEnemy(state string) string {
 
 // ApplyGameEnd updates user data based on the game outcome
 func ApplyGameEnd(_ realm, state string) {
-	usr := string(std.PreviousRealm().Address())
+	usr := string(runtime.PreviousRealm().Address())
 	if !pokemonDAO.Has(usr) {
 		panic("user is not a member")
 	}
