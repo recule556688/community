@@ -21,27 +21,29 @@ GOIMPORTS_FLAGS ?= $(GOFMT_FLAGS)
 GOTEST_FLAGS ?= -v -p 1 -timeout=30m
 
 ########################################
+run_gno := go run github.com/gnolang/gno/gnovm/cmd/gno
+
 .PHONY: test
 test:
-	gno test -v ./...
+	$(run_gno) test -v ./...
 
 .PHONY: test.fast
 test.fast:
-	gno test -v -failfast -v  ./...
+	$(run_gno) test -v -failfast -v  ./...
 
 .PHONY: lint
 lint:
-	gno lint -v ./...
+	$(run_gno) lint -v ./...
 
 .PHONY: test.sync
 test.sync:
-	gno test -v --update-golden-tests ./...
+	$(run_gno) test -v --update-golden-tests ./...
 
 .PHONY: fmt
 GNOFMT_FLAGS ?= -w
 fmt:
-	gno fmt $(GNOFMT_FLAGS) ./...
+	$(run_gno) fmt $(GNOFMT_FLAGS) ./...
 
 .PHONY: tidy
 tidy:
-	gno mod tidy -v --recursive
+	$(run_gno) mod tidy -v --recursive
