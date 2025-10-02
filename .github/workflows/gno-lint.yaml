@@ -33,7 +33,7 @@ jobs:
 
       - name: Ensure deps are downloaded
         run: go mod download
-s
+
       - name: Lint
         working-directory: packages
         run: go run github.com/gnolang/gno/gnovm/cmd/gno lint ./... -v
