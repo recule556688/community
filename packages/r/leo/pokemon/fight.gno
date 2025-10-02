@@ -3,7 +3,6 @@ package pokemon
 import (
 	"chain/runtime"
 	"errors"
-	"github.com/gnolang/gno/gnovm/stdlibs/std"
 	"strconv"
 
 	"gno.land/p/moul/md"
