@@ -1,23 +1,23 @@
 package gnoplace
 
 import (
+	"chain/runtime"
 	"net/url"
-	"std"
 	"strconv"
 	"time"
 
-	"gno.land/p/nt/avl"
 	"gno.land/p/moul/md"
+	"gno.land/p/nt/avl"
 	"gno.land/r/leon/hor"
 )
 
 // todo: versionning
 
 var (
-	users  = avl.NewTree()
-	pixels = [300]int{0}
+	users      = avl.NewTree()
+	pixels     = [300]int{0}
 	interval_s = 30 * time.Second
-	colors = []string{"⬜", "⬛", "🟦", "🟪", "🟧", "🟫", "🟥", "🟨", "🟩"}
+	colors     = []string{"⬜", "⬛", "🟦", "🟪", "🟧", "🟫", "🟥", "🟨", "🟩"}
 )
 
 func init() {
@@ -25,7 +25,7 @@ func init() {
 }
 
 // Sets a pixel to a color
-func SetPixel(_ realm, pixel int, color int) string {
+func SetPixel(_ realm, pixel int, color int) {
 	// check for errors
 	if pixel < 0 || pixel >= len(pixels) {
 		panic("invalid pixel")
@@ -35,7 +35,8 @@ func SetPixel(_ realm, pixel int, color int) string {
 	}
 
 	// check if user allowed to set pixel
-	lastEvent, ok := users.Get(std.PreviousRealm().Address().String())
+	lastEvent, ok := users.Get(runtime.PreviousRealm().Address().String())
+
 	if ok && time.Since(lastEvent.(time.Time)) < interval_s {
 		panic("you placed a pixel less than " + interval_s.String() + " ago")
 	}
@@ -43,9 +44,7 @@ func SetPixel(_ realm, pixel int, color int) string {
 	pixels[pixel] = color
 
 	// record the SetPixel event time for this user
-	users.Set(std.PreviousRealm().Address().String(), time.Now())
-
-	return ""
+	users.Set(runtime.PreviousRealm().Address().String(), time.Now())
 }
 
 // Render renders ui and pixel grid
