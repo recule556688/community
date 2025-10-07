@@ -28,14 +28,14 @@ func (ge *GameEngine) CountNeighbors(grid *Grid, x, y int) int {
 // and bounds checking by accessing the cells array directly.
 func (ge *GameEngine) countNeighborsOptimized(grid *Grid, x, y int) int {
 	count := 0
-	
+
 	// Check all 8 neighbors with bounds checking optimized
 	for dy := -1; dy <= 1; dy++ {
 		for dx := -1; dx <= 1; dx++ {
 			if dx == 0 && dy == 0 {
 				continue // Skip the cell itself
 			}
-			
+
 			nx, ny := x+dx, y+dy
 			// Inline bounds check for better performance
 			if nx >= 0 && nx < GRID_WIDTH && ny >= 0 && ny < GRID_HEIGHT {
