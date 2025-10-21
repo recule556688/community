@@ -54,6 +54,9 @@ func Render(path string) string {
 // AddLocation allows adding a new geographic location to the system
 func AddLocation(name, description string, latitude, longitude float64, category string) string {
 	caller := std.PreviousRealm().Address()
+	if !authManager.CheckRateLimit(caller.String(), "add_location", 60) {
+		return "Rate limit exceeded. Please try again later."
+	}
 	location := locationManager.AddLocation(caller, name, description, latitude, longitude, category)
 	return "Location added with ID: " + location.ID
 }
@@ -61,6 +64,9 @@ func AddLocation(name, description string, latitude, longitude float64, category
 // CheckIn allows a user to check in at a specific location
 func CheckIn(locationID, proof string) string {
 	caller := std.PreviousRealm().Address()
+	if !authManager.CheckRateLimit(caller.String(), "check_in", 60) {
+		return "Rate limit exceeded. Please try again later."
+	}
 	visit := visitManager.CheckIn(caller, locationID, proof)
 	if visit == nil {
 		return "Check-in failed"
@@ -71,6 +77,9 @@ func CheckIn(locationID, proof string) string {
 // CreateEvent creates a location-based event (like airdrops)
 func CreateEvent(locationID, name, description, password string, eventType int, startTime, endTime int64) string {
 	caller := std.PreviousRealm().Address()
+	if !authManager.CheckRateLimit(caller.String(), "create_event", 300) { // 5 minute cooldown
+		return "Rate limit exceeded. Please try again later."
+	}
 	event := eventManager.CreateEvent(caller, locationID, name, description, password, eventType, startTime, endTime)
 	return "Event created with ID: " + event.ID
 }
@@ -78,6 +87,9 @@ func CreateEvent(locationID, name, description, password string, eventType int, 
 // JoinEvent allows a user to join an event with proper authentication
 func JoinEvent(eventID, password string) string {
 	caller := std.PreviousRealm().Address()
+	if !authManager.CheckRateLimit(caller.String(), "join_event:"+eventID, 60) {
+		return "Rate limit exceeded. Please try again later."
+	}
 	success := eventManager.JoinEvent(caller, eventID, password)
 	if success {
 		return "Successfully joined event: " + eventID

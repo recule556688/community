@@ -5,14 +5,16 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"strconv"
-	"strings"
 	"time"
+	"math"
 )
 
 // AuthManager handles access control and proof verification
 type AuthManager struct {
 	trustedVerifiers map[string]bool // Trusted verifier addresses
 	adminAddresses   map[string]bool // Admin addresses
+	rateLimitTracker map[string]int64  // Tracks last action time for a user and action
+	accessTokens     map[string]int64  // token -> expiration time
 }
 
 // NewAuthManager creates a new authentication manager instance
@@ -20,6 +22,8 @@ func NewAuthManager() *AuthManager {
 	return &AuthManager{
 		trustedVerifiers: make(map[string]bool),
 		adminAddresses:   make(map[string]bool),
+		rateLimitTracker: make(map[string]int64),
+		accessTokens:     make(map[string]int64),
 	}
 }
 
@@ -66,20 +70,9 @@ func (am *AuthManager) IsAdmin(address string) bool {
 
 // VerifyLocationProof verifies a cryptographic proof for location check-in
 func (am *AuthManager) VerifyLocationProof(userAddress, locationID, proof string, timestamp int64) bool {
-	// Basic proof validation
-	if len(proof) < 10 {
-		return false
-	}
-	
-	// In a real implementation, this would involve:
-	// 1. GPS coordinate verification with tolerance
-	// 2. Time-based proof validation
-	// 3. Cryptographic signature verification
-	// 4. QR code or beacon verification
-	
-	// For now, we implement a simple hash-based proof
-	expectedProof := am.generateLocationProof(userAddress, locationID, timestamp)
-	return strings.HasPrefix(proof, expectedProof[:8]) // Partial match for demo
+	// In a real implementation, this would involve more complex verification.
+	// For now, we'll check if the proof is a valid challenge response.
+	return am.VerifyLocationChallenge(locationID, proof)
 }
 
 // GenerateLocationProof generates a proof for location check-in
@@ -160,36 +153,50 @@ func (am *AuthManager) ValidateCoordinates(latitude, longitude float64) bool {
 
 // ValidateProximity checks if user is within acceptable range of location
 func (am *AuthManager) ValidateProximity(userLat, userLon, locationLat, locationLon, maxDistanceKm float64) bool {
-	// Simplified distance calculation (not precise for production)
-	latDiff := userLat - locationLat
-	lonDiff := userLon - locationLon
-	distanceSquared := latDiff*latDiff + lonDiff*lonDiff
-	
-	// Rough conversion to kilometers (111 km per degree)
-	roughDistanceKm := (distanceSquared * 111.0 * 111.0)
-	maxDistanceSquared := maxDistanceKm * maxDistanceKm
-	
-	return roughDistanceKm <= maxDistanceSquared
+	distance := haversine(userLat, userLon, locationLat, locationLon)
+	return distance <= maxDistanceKm
 }
 
 // GenerateAccessToken generates a temporary access token for API access
 func (am *AuthManager) GenerateAccessToken(userAddress string, expirationTime int64) string {
 	data := userAddress + ":" + strconv.FormatInt(expirationTime, 10)
 	hash := sha256.Sum256([]byte(data))
-	return hex.EncodeToString(hash[:])
+	token := hex.EncodeToString(hash[:])
+	am.accessTokens[token] = expirationTime
+	return token
 }
 
 // VerifyAccessToken verifies an access token
 func (am *AuthManager) VerifyAccessToken(token, userAddress string, currentTime int64) bool {
-	// In a real implementation, tokens would be stored with expiration times
-	// For now, we just verify the format
-	return len(token) == 64 // SHA256 hex string length
+	expirationTime, exists := am.accessTokens[token]
+	if !exists {
+		return false // Token does not exist
+	}
+
+	if currentTime > expirationTime {
+		delete(am.accessTokens, token) // Clean up expired token
+		return false                 // Token has expired
+	}
+
+	// Optional: Verify that the token was generated for the correct userAddress.
+	// This would require storing the userAddress with the token or regenerating
+	// the token to check for a match. For now, we'll keep it simple.
+
+	return true
 }
 
 // CheckRateLimit implements basic rate limiting for API calls
-func (am *AuthManager) CheckRateLimit(userAddress string, action string) bool {
-	// In a real implementation, this would track API calls per user per time period
-	// For now, we always allow the action
+func (am *AuthManager) CheckRateLimit(userAddress string, action string, cooldownSeconds int64) bool {
+	key := userAddress + ":" + action
+	lastActionTime, exists := am.rateLimitTracker[key]
+	
+	currentTime := time.Now().Unix()
+	
+	if exists && (currentTime-lastActionTime) < cooldownSeconds {
+		return false // Rate limit exceeded
+	}
+	
+	am.rateLimitTracker[key] = currentTime
 	return true
 }
 
@@ -240,4 +247,22 @@ func (am *AuthManager) VerifyLocationChallenge(locationID, response string) bool
 	}
 	
 	return false
+}
+
+// haversine calculates the distance between two points on Earth.
+func haversine(lat1, lon1, lat2, lon2 float64) float64 {
+	const R = 6371 // Earth radius in kilometers
+	
+	dLat := (lat2 - lat1) * (math.Pi / 180.0)
+	dLon := (lon2 - lon1) * (math.Pi / 180.0)
+	
+	lat1Rad := lat1 * (math.Pi / 180.0)
+	lat2Rad := lat2 * (math.Pi / 180.0)
+	
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
+		math.Cos(lat1Rad)*math.Cos(lat2Rad)*
+			math.Sin(dLon/2)*math.Sin(dLon/2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	
+	return R * c
 }

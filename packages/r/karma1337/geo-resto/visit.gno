@@ -144,13 +144,12 @@ func (vm *VisitManager) GetRecentVisits(limit int) []*Visit {
 		allVisits = append(allVisits, visit)
 	}
 	
-	// Simple sorting by timestamp (newest first)
-	// In a production system, you'd want a more efficient approach
-	for i := 0; i < len(allVisits)-1; i++ {
-		for j := i + 1; j < len(allVisits); j++ {
-			if allVisits[i].Timestamp < allVisits[j].Timestamp {
-				allVisits[i], allVisits[j] = allVisits[j], allVisits[i]
-			}
+	// Use a more efficient sorting algorithm (insertion sort)
+	for i := 1; i < len(allVisits); i++ {
+		j := i
+		for j > 0 && allVisits[j-1].Timestamp < allVisits[j].Timestamp {
+			allVisits[j-1], allVisits[j] = allVisits[j], allVisits[j-1]
+			j--
 		}
 	}
 	
