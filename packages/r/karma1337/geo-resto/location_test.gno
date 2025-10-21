@@ -106,3 +106,37 @@ func TestLocationVerification(t *testing.T) {
 		t.Error("Location should be verified")
 	}
 }
+
+func TestNearbyLocations(t *testing.T) {
+	lm := NewLocationManager()
+	creator := std.Address("g1creator")
+
+	// Paris
+	lm.AddLocation(creator, "Eiffel Tower", "", 48.8584, 2.2945, "landmark")
+	// London
+	lm.AddLocation(creator, "Big Ben", "", 51.5007, -0.1246, "landmark")
+	// New York
+	lm.AddLocation(creator, "Statue of Liberty", "", 40.6892, -74.0445, "landmark")
+
+	// Search near Paris
+	nearby := lm.GetNearbyLocations(48.8566, 2.3522, 10) // 10 km radius
+	if len(nearby) != 1 {
+		t.Errorf("Expected 1 nearby location, got %d", len(nearby))
+	}
+	if nearby[0].Name != "Eiffel Tower" {
+		t.Errorf("Expected Eiffel Tower, got %s", nearby[0].Name)
+	}
+
+	// Search with a larger radius to include London
+	nearby = lm.GetNearbyLocations(48.8566, 2.3522, 400) // 400 km radius
+	var foundLondon bool
+	for _, loc := range nearby {
+		if loc.Name == "Big Ben" {
+			foundLondon = true
+			break
+		}
+	}
+	if !foundLondon {
+		t.Errorf("Expected to find London in a 400km radius of Paris")
+	}
+}
