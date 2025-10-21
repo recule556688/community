@@ -149,17 +149,13 @@ func (lm *LocationManager) VerifyLocation(locationID string, verifier std.Addres
 	return true
 }
 
-// GetNearbyLocations returns locations within a rough distance (simplified calculation)
+// GetNearbyLocations returns locations within a given radius using the Haversine formula.
 func (lm *LocationManager) GetNearbyLocations(latitude, longitude, radiusKm float64) []*Location {
 	nearby := make([]*Location, 0)
 	
 	for _, location := range lm.locations {
-		// Simplified distance calculation (not precise for production)
-		latDiff := location.Latitude - latitude
-		lonDiff := location.Longitude - longitude
-		roughDistance := (latDiff*latDiff + lonDiff*lonDiff) * 111.0 // Rough km conversion
-		
-		if roughDistance <= radiusKm*radiusKm {
+		distance := haversine(latitude, longitude, location.Latitude, location.Longitude)
+		if distance <= radiusKm {
 			nearby = append(nearby, location)
 		}
 	}
