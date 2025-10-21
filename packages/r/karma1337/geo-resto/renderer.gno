@@ -17,26 +17,26 @@ func NewRenderer() *Renderer {
 // RenderMainPage displays the main interface
 func (r *Renderer) RenderMainPage() string {
 	var sb strings.Builder
-	
+
 	sb.WriteString("# 🌍 Geo-Resto - Decentralized Geographic Data\n\n")
 	sb.WriteString("Welcome to Geo-Resto, a blockchain-based platform for sharing and verifying geographic data.\n\n")
-	
+
 	// Statistics
 	allLocations := locationManager.GetAllLocations()
 	activeEvents := eventManager.GetActiveEvents()
-	
+
 	sb.WriteString("## 📊 Platform Statistics\n")
 	sb.WriteString("- **Total Locations**: " + strconv.Itoa(len(allLocations)) + "\n")
 	sb.WriteString("- **Active Events**: " + strconv.Itoa(len(activeEvents)) + "\n")
 	sb.WriteString("- **Total Visits**: " + r.getTotalVisitCount() + "\n\n")
-	
+
 	// Navigation
 	sb.WriteString("## 🗺️ Navigation\n")
 	sb.WriteString("- [View All Locations](/r/karma1337/georesto:locations)\n")
 	sb.WriteString("- [Recent Visits](/r/karma1337/georesto:visits)\n")
 	sb.WriteString("- [Active Events](/r/karma1337/georesto:events)\n")
 	sb.WriteString("- [World Map](/r/karma1337/georesto:map)\n\n")
-	
+
 	// Recent activity
 	sb.WriteString("## 🔥 Recent Activity\n")
 	recentVisits := visitManager.GetRecentVisits(5)
@@ -50,22 +50,22 @@ func (r *Renderer) RenderMainPage() string {
 			}
 		}
 	}
-	
+
 	return sb.String()
 }
 
 // RenderAllLocations displays all locations in the system
 func (r *Renderer) RenderAllLocations() string {
 	var sb strings.Builder
-	
+
 	sb.WriteString("# 📍 All Locations\n\n")
-	
+
 	locations := locationManager.GetAllLocations()
 	if len(locations) == 0 {
 		sb.WriteString("No locations have been added yet.\n")
 		return sb.String()
 	}
-	
+
 	// Group by category
 	categories := make(map[string][]*Location)
 	for _, location := range locations {
@@ -75,7 +75,7 @@ func (r *Renderer) RenderAllLocations() string {
 		}
 		categories[category] = append(categories[category], location)
 	}
-	
+
 	for category, categoryLocations := range categories {
 		sb.WriteString("## " + category + "\n\n")
 		for _, location := range categoryLocations {
@@ -83,21 +83,21 @@ func (r *Renderer) RenderAllLocations() string {
 		}
 		sb.WriteString("\n")
 	}
-	
+
 	return sb.String()
 }
 
 // RenderLocation displays details for a specific location
 func (r *Renderer) RenderLocation(locationID string) string {
 	var sb strings.Builder
-	
+
 	location := locationManager.GetLocation(locationID)
 	if location == nil {
 		return "Location not found."
 	}
-	
+
 	sb.WriteString("# 📍 " + location.Name + "\n\n")
-	
+
 	// Location details
 	sb.WriteString("**Description**: " + location.Description + "\n")
 	sb.WriteString("**Category**: " + location.Category + "\n")
@@ -111,11 +111,11 @@ func (r *Renderer) RenderLocation(locationID string) string {
 		sb.WriteString("**Status**: ⏳ Pending verification\n")
 	}
 	sb.WriteString("\n")
-	
+
 	// Recent visits
 	visits := visitManager.GetLocationVisits(locationID)
 	sb.WriteString("## 🔄 Recent Visits (" + strconv.Itoa(len(visits)) + ")\n\n")
-	
+
 	if len(visits) == 0 {
 		sb.WriteString("No visits recorded yet.\n")
 	} else {
@@ -124,7 +124,7 @@ func (r *Renderer) RenderLocation(locationID string) string {
 		if limit > 10 {
 			limit = 10
 		}
-		
+
 		for i := len(visits) - limit; i < len(visits); i++ {
 			visit := visits[i]
 			sb.WriteString("- " + r.truncateAddress(visit.UserAddress) + " - " + r.formatTimestamp(visit.Timestamp))
@@ -134,7 +134,7 @@ func (r *Renderer) RenderLocation(locationID string) string {
 			sb.WriteString("\n")
 		}
 	}
-	
+
 	// Associated events
 	events := eventManager.GetLocationEvents(locationID)
 	if len(events) > 0 {
@@ -143,24 +143,24 @@ func (r *Renderer) RenderLocation(locationID string) string {
 			sb.WriteString(r.renderEventCard(event))
 		}
 	}
-	
+
 	return sb.String()
 }
 
 // RenderUserVisits displays visits for a specific user
 func (r *Renderer) RenderUserVisits(userAddress string) string {
 	var sb strings.Builder
-	
+
 	sb.WriteString("# 👤 User Visits: " + r.truncateAddress(userAddress) + "\n\n")
-	
+
 	visits := visitManager.GetUserVisits(userAddress)
 	if len(visits) == 0 {
 		sb.WriteString("No visits recorded for this user.\n")
 		return sb.String()
 	}
-	
+
 	sb.WriteString("**Total Visits**: " + strconv.Itoa(len(visits)) + "\n\n")
-	
+
 	for _, visit := range visits {
 		location := locationManager.GetLocation(visit.LocationID)
 		if location != nil {
@@ -178,22 +178,22 @@ func (r *Renderer) RenderUserVisits(userAddress string) string {
 			sb.WriteString("\n")
 		}
 	}
-	
+
 	return sb.String()
 }
 
 // RenderRecentVisits displays recent visits across all users
 func (r *Renderer) RenderRecentVisits() string {
 	var sb strings.Builder
-	
+
 	sb.WriteString("# 🔄 Recent Visits\n\n")
-	
+
 	visits := visitManager.GetRecentVisits(20)
 	if len(visits) == 0 {
 		sb.WriteString("No visits recorded yet.\n")
 		return sb.String()
 	}
-	
+
 	for _, visit := range visits {
 		location := locationManager.GetLocation(visit.LocationID)
 		if location != nil {
@@ -204,45 +204,45 @@ func (r *Renderer) RenderRecentVisits() string {
 			sb.WriteString("\n")
 		}
 	}
-	
+
 	return sb.String()
 }
 
 // RenderActiveEvents displays all active events
 func (r *Renderer) RenderActiveEvents() string {
 	var sb strings.Builder
-	
+
 	sb.WriteString("# 🎯 Active Events\n\n")
-	
+
 	events := eventManager.GetActiveEvents()
 	if len(events) == 0 {
 		sb.WriteString("No active events at the moment.\n")
 		return sb.String()
 	}
-	
+
 	for _, event := range events {
 		sb.WriteString(r.renderEventCard(event))
 	}
-	
+
 	return sb.String()
 }
 
 // RenderEvent displays details for a specific event
 func (r *Renderer) RenderEvent(eventID string) string {
 	var sb strings.Builder
-	
+
 	event := eventManager.GetEvent(eventID)
 	if event == nil {
 		return "Event not found."
 	}
-	
+
 	sb.WriteString("# 🎯 " + event.Name + "\n\n")
-	
+
 	// Event details
 	sb.WriteString("**Description**: " + event.Description + "\n")
 	sb.WriteString("**Type**: " + eventManager.GetEventTypeString(event.EventType) + "\n")
 	sb.WriteString("**Location**: ")
-	
+
 	location := locationManager.GetLocation(event.LocationID)
 	if location != nil {
 		sb.WriteString("[" + location.Name + "](/r/karma1337/geo-resto:locations/" + event.LocationID + ")")
@@ -250,7 +250,7 @@ func (r *Renderer) RenderEvent(eventID string) string {
 		sb.WriteString(event.LocationID)
 	}
 	sb.WriteString("\n")
-	
+
 	sb.WriteString("**Created by**: " + r.truncateAddress(event.Creator.String()) + "\n")
 	sb.WriteString("**Start Time**: " + r.formatTimestamp(event.StartTime) + "\n")
 	sb.WriteString("**End Time**: " + r.formatTimestamp(event.EndTime) + "\n")
@@ -259,27 +259,27 @@ func (r *Renderer) RenderEvent(eventID string) string {
 		sb.WriteString(" / " + strconv.Itoa(event.MaxParticipants))
 	}
 	sb.WriteString("\n")
-	
+
 	if event.IsActive {
 		sb.WriteString("**Status**: 🟢 Active\n")
 	} else {
 		sb.WriteString("**Status**: 🔴 Inactive\n")
 	}
-	
+
 	if event.Rewards != "" {
 		sb.WriteString("**Rewards**: " + event.Rewards + "\n")
 	}
-	
+
 	if event.Password != "" {
 		sb.WriteString("**Access**: 🔒 Password required\n")
 	}
-	
+
 	sb.WriteString("\n")
-	
+
 	// QR Code and Verification Info (for event organizers)
 	sb.WriteString("## 📱 Event Verification\n\n")
 	sb.WriteString("**QR Code**: `" + event.QRCode + "`\n\n")
-	
+
 	// Verification Statistics
 	totalParticipants := len(event.Participants)
 	verifiedCount := len(event.VerifiedAttendees)
@@ -288,7 +288,7 @@ func (r *Renderer) RenderEvent(eventID string) string {
 		rateStr := strconv.Itoa(int(verificationRate)) + "." + strconv.Itoa(int((verificationRate-float64(int(verificationRate)))*10))
 		sb.WriteString("**Verification Stats**: " + strconv.Itoa(verifiedCount) + "/" + strconv.Itoa(totalParticipants) + " verified (" + rateStr + "%)\n\n")
 	}
-	
+
 	// Verified Attendees List
 	if len(event.VerifiedAttendees) > 0 {
 		sb.WriteString("### ✅ Verified Attendees\n\n")
@@ -297,7 +297,7 @@ func (r *Renderer) RenderEvent(eventID string) string {
 		}
 		sb.WriteString("\n")
 	}
-	
+
 	sb.WriteString("\n")
 
 	// Participants list
@@ -307,30 +307,30 @@ func (r *Renderer) RenderEvent(eventID string) string {
 			sb.WriteString(strconv.Itoa(i+1) + ". " + r.truncateAddress(participant) + "\n")
 		}
 	}
-	
+
 	return sb.String()
 }
 
 // RenderWorldMap displays a text-based world map representation
 func (r *Renderer) RenderWorldMap() string {
 	var sb strings.Builder
-	
+
 	sb.WriteString("# 🗺️ World Map\n\n")
 	sb.WriteString("*Text-based representation of location distribution*\n\n")
-	
+
 	locations := locationManager.GetAllLocations()
 	if len(locations) == 0 {
 		sb.WriteString("No locations to display on the map.\n")
 		return sb.String()
 	}
-	
+
 	// Group locations by region (simplified)
 	regions := make(map[string][]*Location)
 	for _, location := range locations {
 		region := r.getRegionFromCoordinates(location.Latitude, location.Longitude)
 		regions[region] = append(regions[region], location)
 	}
-	
+
 	sb.WriteString("## 🌍 Locations by Region\n\n")
 	for region, regionLocations := range regions {
 		sb.WriteString("### " + region + " (" + strconv.Itoa(len(regionLocations)) + " locations)\n")
@@ -339,7 +339,7 @@ func (r *Renderer) RenderWorldMap() string {
 		}
 		sb.WriteString("\n")
 	}
-	
+
 	return sb.String()
 }
 
@@ -347,7 +347,7 @@ func (r *Renderer) RenderWorldMap() string {
 
 func (r *Renderer) renderLocationCard(location *Location) string {
 	var sb strings.Builder
-	
+
 	sb.WriteString("### [" + location.Name + "](/r/karma1337/geo-resto:locations/" + location.ID + ")\n")
 	sb.WriteString(location.Description + "\n\n")
 	sb.WriteString("📍 *" + strconv.FormatFloat(location.Latitude, 'f', 4, 64) + ", " + strconv.FormatFloat(location.Longitude, 'f', 4, 64) + "*")
@@ -356,13 +356,13 @@ func (r *Renderer) renderLocationCard(location *Location) string {
 		sb.WriteString(" | ✅ Verified")
 	}
 	sb.WriteString("\n\n")
-	
+
 	return sb.String()
 }
 
 func (r *Renderer) renderEventCard(event *Event) string {
 	var sb strings.Builder
-	
+
 	sb.WriteString("### [" + event.Name + "](/r/karma1337/geo-resto:events/" + event.ID + ")\n")
 	sb.WriteString(event.Description + "\n\n")
 	sb.WriteString("📅 " + r.formatTimestamp(event.StartTime) + " - " + r.formatTimestamp(event.EndTime) + "\n")
@@ -371,7 +371,7 @@ func (r *Renderer) renderEventCard(event *Event) string {
 		sb.WriteString(" | 🟢 Active")
 	}
 	sb.WriteString("\n\n")
-	
+
 	return sb.String()
 }
 
@@ -390,7 +390,7 @@ func (r *Renderer) formatTimestamp(timestamp int64) string {
 func (r *Renderer) timeAgo(timestamp int64) string {
 	now := time.Now().Unix()
 	diff := now - timestamp
-	
+
 	if diff < 60 {
 		return "just now"
 	} else if diff < 3600 {

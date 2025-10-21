@@ -102,58 +102,25 @@ func GetUserStats(userAddress string) string {
 	if userAddress == "" {
 		userAddress = std.PreviousRealm().Address().String()
 	}
-	
+
 	visitCount := visitManager.GetUserVisitCount(userAddress)
 	locationCount := locationManager.GetUserLocationCount(userAddress)
-	
+
 	return "User " + userAddress + " - Visits: " + strconv.Itoa(visitCount) + ", Locations Added: " + strconv.Itoa(locationCount)
 }
 
-// VerifyVisit provides cryptographic proof that a user visited a location
-func VerifyVisit(userAddress, locationID string, timestamp int64) bool {
-	return visitManager.VerifyVisit(userAddress, locationID, timestamp)
-}
-
-// GetEventQRCode returns the QR code for event organizers to verify attendees
-func GetEventQRCode(eventID string) string {
-	caller := std.PreviousRealm().Address()
-	return eventManager.GetEventQRCode(eventID, caller)
-}
-
-// GenerateAttendeeCode generates a verification code for an attendee at an event
-func GenerateAttendeeCode(eventID string) string {
-	caller := std.PreviousRealm().Address()
-	return eventManager.GenerateAttendeeVerificationCode(eventID, caller)
-}
-
-// VerifyAttendeePresence allows event organizers to verify attendee presence using verification codes
-func VerifyAttendeePresence(eventID, verificationCode, attendeeAddress string) string {
-	caller := std.PreviousRealm().Address()
-	success := eventManager.VerifyAttendeePresence(eventID, verificationCode, caller, attendeeAddress)
-	if success {
-		return "Attendee verified successfully for event: " + eventID
+// GetEventStats returns statistics for a specific event
+func GetEventStats(eventID string) string {
+	if eventID == "" {
+		return "Error: Event ID is required"
 	}
-	return "Failed to verify attendee presence"
-}
 
-// GetVerifiedAttendees returns the list of verified attendees for an event
-func GetVerifiedAttendees(eventID string) string {
-	caller := std.PreviousRealm().Address()
-	attendees := eventManager.GetVerifiedAttendees(eventID, caller)
-	if len(attendees) == 0 {
-		return "No verified attendees for event: " + eventID
-	}
-	return "Verified attendees (" + strconv.Itoa(len(attendees)) + "): " + strings.Join(attendees, ", ")
-}
-
-// GetEventVerificationStats returns verification statistics for an event
-func GetEventVerificationStats(eventID string) string {
 	caller := std.PreviousRealm().Address()
 	total, verified, rate := eventManager.GetAttendeeVerificationStats(eventID, caller)
 	rateStr := strconv.Itoa(int(rate)) + "." + strconv.Itoa(int((rate-float64(int(rate)))*10))
-	return "Event " + eventID + " - Total Participants: " + strconv.Itoa(total) + 
-		   ", Verified: " + strconv.Itoa(verified) + 
-		   ", Verification Rate: " + rateStr + "%"
+	return "Event " + eventID + " - Total Participants: " + strconv.Itoa(total) +
+		", Verified: " + strconv.Itoa(verified) +
+		", Verification Rate: " + rateStr + "%"
 }
 
 // GetLocationChallenge returns a challenge for a specific location
