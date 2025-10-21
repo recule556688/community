@@ -73,12 +73,19 @@ func TestVisitVerification(t *testing.T) {
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
 	
 	user := std.Address("g1user123")
-	visit := visitManager.CheckIn(user, location.ID, "valid-proof")
+	
+	// Generate a valid proof using the challenge-response system
+	validProof := authManager.GenerateLocationChallenge(location.ID)
+	visit := visitManager.CheckIn(user, location.ID, validProof)
 	
 	if visit == nil {
 		t.Fatal("Failed to check in")
 	}
 	
+	if !visit.Verified {
+		t.Fatal("Visit should be marked as verified with a valid proof")
+	}
+
 	// Test verification
 	verified := visitManager.VerifyVisit(user.String(), location.ID, visit.Timestamp)
 	if !verified {
