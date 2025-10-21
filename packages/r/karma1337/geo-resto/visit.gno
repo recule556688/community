@@ -194,7 +194,7 @@ func (vm *VisitManager) generateProofHash(userAddress, locationID, proof string,
 	return hex.EncodeToString(hash[:])
 }
 
-// verifyProof validates the provided proof (simplified implementation)
+// verifyProof validates the provided proof by checking it against a time-based challenge
 func (vm *VisitManager) verifyProof(proof, userAddress, locationID string) bool {
 	// In a real implementation, this would involve:
 	// 1. GPS coordinate verification
@@ -202,8 +202,8 @@ func (vm *VisitManager) verifyProof(proof, userAddress, locationID string) bool 
 	// 3. Time-based tokens
 	// 4. Cryptographic signatures
 	
-	// For now, we accept any non-empty proof as valid
-	return len(proof) > 0
+	// We now use the challenge-response mechanism from authManager
+	return authManager.VerifyLocationChallenge(locationID, proof)
 }
 
 // AddVisitNotes allows adding notes to an existing visit
