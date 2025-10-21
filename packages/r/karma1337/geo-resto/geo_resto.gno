@@ -53,15 +53,14 @@ func Render(path string) string {
 
 // AddLocation allows adding a new geographic location to the system
 func AddLocation(name, description string, latitude, longitude float64, category string) string {
-	// For now, use a placeholder address until we fix authentication
-	caller := std.Address("g1test123")
+	caller := std.PreviousRealm().Address()
 	location := locationManager.AddLocation(caller, name, description, latitude, longitude, category)
 	return "Location added with ID: " + location.ID
 }
 
 // CheckIn allows a user to check in at a specific location
 func CheckIn(locationID, proof string) string {
-	caller := std.Address("g1test123")
+	caller := std.PreviousRealm().Address()
 	visit := visitManager.CheckIn(caller, locationID, proof)
 	if visit == nil {
 		return "Check-in failed"
@@ -71,14 +70,14 @@ func CheckIn(locationID, proof string) string {
 
 // CreateEvent creates a location-based event (like airdrops)
 func CreateEvent(locationID, name, description, password string, eventType int, startTime, endTime int64) string {
-	caller := std.Address("g1test123")
+	caller := std.PreviousRealm().Address()
 	event := eventManager.CreateEvent(caller, locationID, name, description, password, eventType, startTime, endTime)
 	return "Event created with ID: " + event.ID
 }
 
 // JoinEvent allows a user to join an event with proper authentication
 func JoinEvent(eventID, password string) string {
-	caller := std.Address("g1test123")
+	caller := std.PreviousRealm().Address()
 	success := eventManager.JoinEvent(caller, eventID, password)
 	if success {
 		return "Successfully joined event: " + eventID
@@ -89,7 +88,7 @@ func JoinEvent(eventID, password string) string {
 // GetUserStats returns statistics for a specific user
 func GetUserStats(userAddress string) string {
 	if userAddress == "" {
-		userAddress = "g1test123"
+		userAddress = std.PreviousRealm().Address().String()
 	}
 	
 	visitCount := visitManager.GetUserVisitCount(userAddress)
@@ -105,19 +104,19 @@ func VerifyVisit(userAddress, locationID string, timestamp int64) bool {
 
 // GetEventQRCode returns the QR code for event organizers to verify attendees
 func GetEventQRCode(eventID string) string {
-	caller := std.Address("g1test123") // TODO: Replace with actual caller when authentication is fixed
+	caller := std.PreviousRealm().Address()
 	return eventManager.GetEventQRCode(eventID, caller)
 }
 
 // GenerateAttendeeCode generates a verification code for an attendee at an event
 func GenerateAttendeeCode(eventID string) string {
-	caller := std.Address("g1test123") // TODO: Replace with actual caller when authentication is fixed
+	caller := std.PreviousRealm().Address()
 	return eventManager.GenerateAttendeeVerificationCode(eventID, caller)
 }
 
 // VerifyAttendeePresence allows event organizers to verify attendee presence using verification codes
 func VerifyAttendeePresence(eventID, verificationCode, attendeeAddress string) string {
-	caller := std.Address("g1test123") // TODO: Replace with actual caller when authentication is fixed
+	caller := std.PreviousRealm().Address()
 	success := eventManager.VerifyAttendeePresence(eventID, verificationCode, caller, attendeeAddress)
 	if success {
 		return "Attendee verified successfully for event: " + eventID
@@ -127,7 +126,7 @@ func VerifyAttendeePresence(eventID, verificationCode, attendeeAddress string) s
 
 // GetVerifiedAttendees returns the list of verified attendees for an event
 func GetVerifiedAttendees(eventID string) string {
-	caller := std.Address("g1test123") // TODO: Replace with actual caller when authentication is fixed
+	caller := std.PreviousRealm().Address()
 	attendees := eventManager.GetVerifiedAttendees(eventID, caller)
 	if len(attendees) == 0 {
 		return "No verified attendees for event: " + eventID
@@ -137,7 +136,7 @@ func GetVerifiedAttendees(eventID string) string {
 
 // GetEventVerificationStats returns verification statistics for an event
 func GetEventVerificationStats(eventID string) string {
-	caller := std.Address("g1test123") // TODO: Replace with actual caller when authentication is fixed
+	caller := std.PreviousRealm().Address()
 	total, verified, rate := eventManager.GetAttendeeVerificationStats(eventID, caller)
 	rateStr := strconv.Itoa(int(rate)) + "." + strconv.Itoa(int((rate-float64(int(rate)))*10))
 	return "Event " + eventID + " - Total Participants: " + strconv.Itoa(total) + 
