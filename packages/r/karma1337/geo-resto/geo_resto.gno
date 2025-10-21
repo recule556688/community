@@ -143,3 +143,8 @@ func GetEventVerificationStats(eventID string) string {
 		   ", Verified: " + strconv.Itoa(verified) + 
 		   ", Verification Rate: " + rateStr + "%"
 }
+
+// GetLocationChallenge returns a challenge for a specific location
+func GetLocationChallenge(locationID string) string {
+	return authManager.GenerateLocationChallenge(locationID)
+}
