@@ -1,14 +1,13 @@
 package georesto
 
 import (
-	"std"
 	"testing"
 	"time"
 )
 
 func TestEventManager(t *testing.T) {
 	// Setup - use global managers
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 
 	// Create a test location using global manager
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
@@ -48,7 +47,7 @@ func TestEventManager(t *testing.T) {
 }
 
 func TestEventJoining(t *testing.T) {
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
 
 	// Create an active event (starting now)
@@ -66,7 +65,7 @@ func TestEventJoining(t *testing.T) {
 		endTime,
 	)
 
-	user := std.Address("g1user123")
+	user := address("g1user123")
 
 	// Test joining with correct password
 	success := eventManager.JoinEvent(event.ID, "password123", user)
@@ -88,7 +87,7 @@ func TestEventJoining(t *testing.T) {
 }
 
 func TestEventStatusUpdates(t *testing.T) {
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
 
 	// Create a future event
@@ -128,7 +127,7 @@ func TestEventStatusUpdates(t *testing.T) {
 
 func TestEventsByLocation(t *testing.T) {
 
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 	location1 := locationManager.AddLocation(creator, "Location 1", "Test", 48.8566, 2.3522, "test")
 	location2 := locationManager.AddLocation(creator, "Location 2", "Test", 48.8600, 2.3500, "test")
 
@@ -185,7 +184,7 @@ func TestEventTypeString(t *testing.T) {
 
 func TestEventValidation(t *testing.T) {
 
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
 
 	currentTime := time.Now().Unix()

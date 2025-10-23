@@ -1,14 +1,13 @@
 package georesto
 
 import (
-	"std"
 	"testing"
 	"time"
 )
 
 func TestQRCodeVerification(t *testing.T) {
 	// Setup - use global managers to ensure they work together
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 
 	// Create a location first using global manager
 	location := locationManager.AddLocation(creator, "Test Venue", "A test venue for events", 40.7128, -74.0060, "venue")
@@ -81,7 +80,7 @@ func TestQRCodeVerification(t *testing.T) {
 	}
 
 	// Test access control - non-creator shouldn't access QR code
-	nonCreator := std.Address("g1other123")
+	nonCreator := address("g1other123")
 	qrCode := eventManager.GetEventQRCode(event.ID, nonCreator)
 	if qrCode != "" {
 		t.Error("Non-creator should not access QR code")
@@ -108,7 +107,7 @@ func TestQRCodeTimeSecurity(t *testing.T) {
 	// This test verifies that verification codes are time-limited
 	// Note: In a real test environment, we'd manipulate time, but this shows the concept
 
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 
 	// Create location and event using global managers
 	location := locationManager.AddLocation(creator, "Time Test Venue", "Testing time security", 40.7128, -74.0060, "venue")

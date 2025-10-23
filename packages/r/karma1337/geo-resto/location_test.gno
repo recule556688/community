@@ -1,13 +1,12 @@
 package georesto
 
 import (
-	"std"
 	"testing"
 )
 
 func TestLocationManager(t *testing.T) {
 	// Test adding a location using global manager
-	creator := std.Address("g1test123")
+	creator := address("g1test123")
 	location := locationManager.AddLocation(creator, "Test Restaurant", "A great place to eat", 48.8566, 2.3522, "restaurant")
 
 	if location == nil {
@@ -48,7 +47,7 @@ func TestLocationManager(t *testing.T) {
 }
 
 func TestLocationCategories(t *testing.T) {
-	creator := std.Address("g1test123")
+	creator := address("g1test123")
 
 	// Add locations in different categories
 	locationManager.AddLocation(creator, "Restaurant 1", "Food", 48.8566, 2.3522, "restaurant")
@@ -68,7 +67,7 @@ func TestLocationCategories(t *testing.T) {
 }
 
 func TestLocationVisitCount(t *testing.T) {
-	creator := std.Address("g1test123")
+	creator := address("g1test123")
 
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
 
@@ -86,8 +85,8 @@ func TestLocationVisitCount(t *testing.T) {
 }
 
 func TestLocationVerification(t *testing.T) {
-	creator := std.Address("g1test123")
-	verifier := std.Address("g1verifier123")
+	creator := address("g1test123")
+	verifier := address("g1verifier123")
 
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
 
@@ -109,7 +108,7 @@ func TestLocationVerification(t *testing.T) {
 
 func TestNearbyLocations(t *testing.T) {
 	lm := NewLocationManager()
-	creator := std.Address("g1creator")
+	creator := address("g1creator")
 
 	// Paris
 	lm.AddLocation(creator, "Eiffel Tower", "", 48.8584, 2.2945, "landmark")

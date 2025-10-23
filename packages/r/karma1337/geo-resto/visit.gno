@@ -3,7 +3,6 @@ package georesto
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"std"
 	"strconv"
 	"time"
 )
@@ -39,7 +38,7 @@ func NewVisitManager() *VisitManager {
 }
 
 // CheckIn records a user's visit to a location
-func (vm *VisitManager) CheckIn(user std.Address, locationID, proof string) *Visit {
+func (vm *VisitManager) CheckIn(user address, locationID, proof string) *Visit {
 	// Verify the location exists
 	location := locationManager.GetLocation(locationID)
 	if location == nil {
@@ -206,7 +205,7 @@ func (vm *VisitManager) verifyProof(proof, userAddress, locationID string) bool 
 }
 
 // AddVisitNotes allows adding notes to an existing visit
-func (vm *VisitManager) AddVisitNotes(visitID, notes string, user std.Address) bool {
+func (vm *VisitManager) AddVisitNotes(visitID, notes string, user address) bool {
 	visit := vm.GetVisit(visitID)
 	if visit == nil || visit.UserAddress != user.String() {
 		return false

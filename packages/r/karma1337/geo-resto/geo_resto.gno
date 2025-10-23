@@ -1,7 +1,7 @@
 package georesto
 
 import (
-	"std"
+	"chain/runtime"
 	"strconv"
 	"strings"
 )
@@ -53,7 +53,7 @@ func Render(path string) string {
 
 // AddLocation allows adding a new geographic location to the system
 func AddLocation(name, description string, latitude, longitude float64, category string) string {
-	caller := std.PreviousRealm().Address()
+	caller := runtime.PreviousRealm().Address()
 	if !authManager.CheckRateLimit(caller.String(), "add_location", 60) {
 		return "Rate limit exceeded. Please try again later."
 	}
@@ -63,7 +63,7 @@ func AddLocation(name, description string, latitude, longitude float64, category
 
 // CheckIn allows a user to check in at a specific location
 func CheckIn(locationID, proof string) string {
-	caller := std.PreviousRealm().Address()
+	caller := runtime.PreviousRealm().Address()
 	if !authManager.CheckRateLimit(caller.String(), "check_in", 60) {
 		return "Rate limit exceeded. Please try again later."
 	}
@@ -76,7 +76,7 @@ func CheckIn(locationID, proof string) string {
 
 // CreateEvent creates a location-based event (like airdrops)
 func CreateEvent(locationID, name, description, password string, eventType int, startTime, endTime int64) string {
-	caller := std.PreviousRealm().Address()
+	caller := runtime.PreviousRealm().Address()
 	if !authManager.CheckRateLimit(caller.String(), "create_event", 300) { // 5 minute cooldown
 		return "Rate limit exceeded. Please try again later."
 	}
@@ -86,7 +86,7 @@ func CreateEvent(locationID, name, description, password string, eventType int, 
 
 // JoinEvent allows a user to join an event with proper authentication
 func JoinEvent(eventID, password string) string {
-	caller := std.PreviousRealm().Address()
+	caller := runtime.PreviousRealm().Address()
 	if !authManager.CheckRateLimit(caller.String(), "join_event:"+eventID, 60) {
 		return "Rate limit exceeded. Please try again later."
 	}
@@ -100,7 +100,7 @@ func JoinEvent(eventID, password string) string {
 // GetUserStats returns statistics for a specific user
 func GetUserStats(userAddress string) string {
 	if userAddress == "" {
-		userAddress = std.PreviousRealm().Address().String()
+		userAddress = runtime.PreviousRealm().Address().String()
 	}
 
 	visitCount := visitManager.GetUserVisitCount(userAddress)
@@ -115,7 +115,7 @@ func GetEventStats(eventID string) string {
 		return "Error: Event ID is required"
 	}
 
-	caller := std.PreviousRealm().Address()
+	caller := runtime.PreviousRealm().Address()
 	total, verified, rate := eventManager.GetAttendeeVerificationStats(eventID, caller)
 	rateStr := strconv.Itoa(int(rate)) + "." + strconv.Itoa(int((rate-float64(int(rate)))*10))
 	return "Event " + eventID + " - Total Participants: " + strconv.Itoa(total) +

@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"math"
-	"std"
 	"strconv"
 	"time"
 )
@@ -28,7 +27,7 @@ func NewAuthManager() *AuthManager {
 }
 
 // AddTrustedVerifier adds a trusted verifier address
-func (am *AuthManager) AddTrustedVerifier(verifierAddress string, admin std.Address) bool {
+func (am *AuthManager) AddTrustedVerifier(verifierAddress string, admin address) bool {
 	if !am.IsAdmin(admin.String()) {
 		return false
 	}
@@ -38,7 +37,7 @@ func (am *AuthManager) AddTrustedVerifier(verifierAddress string, admin std.Addr
 }
 
 // RemoveTrustedVerifier removes a trusted verifier address
-func (am *AuthManager) RemoveTrustedVerifier(verifierAddress string, admin std.Address) bool {
+func (am *AuthManager) RemoveTrustedVerifier(verifierAddress string, admin address) bool {
 	if !am.IsAdmin(admin.String()) {
 		return false
 	}
@@ -53,7 +52,7 @@ func (am *AuthManager) IsTrustedVerifier(address string) bool {
 }
 
 // AddAdmin adds an admin address
-func (am *AuthManager) AddAdmin(adminAddress string, currentAdmin std.Address) bool {
+func (am *AuthManager) AddAdmin(adminAddress string, currentAdmin address) bool {
 	// Only existing admins can add new admins
 	if len(am.adminAddresses) > 0 && !am.IsAdmin(currentAdmin.String()) {
 		return false
@@ -81,7 +80,7 @@ func (am *AuthManager) GenerateLocationProof(userAddress, locationID string, tim
 }
 
 // VerifyEventAccess verifies access to a password-protected event
-func (am *AuthManager) VerifyEventAccess(eventID, password string, user std.Address) bool {
+func (am *AuthManager) VerifyEventAccess(eventID, password string, user address) bool {
 	event := eventManager.GetEvent(eventID)
 	if event == nil {
 		return false
@@ -98,7 +97,7 @@ func (am *AuthManager) VerifyEventAccess(eventID, password string, user std.Addr
 }
 
 // CanModifyLocation checks if a user can modify a location
-func (am *AuthManager) CanModifyLocation(locationID string, user std.Address) bool {
+func (am *AuthManager) CanModifyLocation(locationID string, user address) bool {
 	location := locationManager.GetLocation(locationID)
 	if location == nil {
 		return false
@@ -125,7 +124,7 @@ func (am *AuthManager) CanModifyLocation(locationID string, user std.Address) bo
 }
 
 // CanModifyEvent checks if a user can modify an event
-func (am *AuthManager) CanModifyEvent(eventID string, user std.Address) bool {
+func (am *AuthManager) CanModifyEvent(eventID string, user address) bool {
 	event := eventManager.GetEvent(eventID)
 	if event == nil {
 		return false

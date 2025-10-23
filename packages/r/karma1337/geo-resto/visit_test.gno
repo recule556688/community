@@ -1,19 +1,18 @@
 package georesto
 
 import (
-	"std"
 	"testing"
 )
 
 func TestVisitManager(t *testing.T) {
 	// Setup - use global managers
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 
 	// Create a test location using global manager
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
 
 	// Test check-in
-	user := std.Address("g1user123")
+	user := address("g1user123")
 	visit := visitManager.CheckIn(user, location.ID, "test-proof")
 
 	if visit == nil {
@@ -49,10 +48,10 @@ func TestVisitManager(t *testing.T) {
 
 func TestVisitCooldown(t *testing.T) {
 
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
 
-	user := std.Address("g1user123")
+	user := address("g1user123")
 
 	// First check-in should succeed
 	visit1 := visitManager.CheckIn(user, location.ID, "test-proof-1")
@@ -69,10 +68,10 @@ func TestVisitCooldown(t *testing.T) {
 
 func TestVisitVerification(t *testing.T) {
 
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
 
-	user := std.Address("g1user123")
+	user := address("g1user123")
 
 	// Generate a valid proof using the challenge-response system
 	validProof := authManager.GenerateLocationChallenge(location.ID)
@@ -100,12 +99,12 @@ func TestVisitVerification(t *testing.T) {
 
 func TestRecentVisits(t *testing.T) {
 
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 	location1 := locationManager.AddLocation(creator, "Location 1", "Test", 48.8566, 2.3522, "test")
 	location2 := locationManager.AddLocation(creator, "Location 2", "Test", 48.8600, 2.3500, "test")
 
-	user1 := std.Address("g1user1")
-	user2 := std.Address("g1user2")
+	user1 := address("g1user1")
+	user2 := address("g1user2")
 
 	// Create visits with slight time differences
 	visit1 := visitManager.CheckIn(user1, location1.ID, "proof1")
@@ -130,10 +129,10 @@ func TestRecentVisits(t *testing.T) {
 
 func TestVisitNotes(t *testing.T) {
 
-	creator := std.Address("g1creator123")
+	creator := address("g1creator123")
 	location := locationManager.AddLocation(creator, "Test Location", "Test", 48.8566, 2.3522, "test")
 
-	user := std.Address("g1user123")
+	user := address("g1user123")
 	visit := visitManager.CheckIn(user, location.ID, "test-proof")
 
 	if visit == nil {
@@ -153,7 +152,7 @@ func TestVisitNotes(t *testing.T) {
 	}
 
 	// Test unauthorized note addition
-	otherUser := std.Address("g1other123")
+	otherUser := address("g1other123")
 	unauthorized := visitManager.AddVisitNotes(visit.ID, "Unauthorized", otherUser)
 	if unauthorized {
 		t.Error("Unauthorized user should not be able to add notes")

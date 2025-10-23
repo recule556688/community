@@ -1,7 +1,6 @@
 package georesto
 
 import (
-	"std"
 	"strconv"
 	"strings"
 	"time"
@@ -9,16 +8,16 @@ import (
 
 // Location represents a geographic point with metadata
 type Location struct {
-	ID          string      // Unique identifier
-	Name        string      // Human-readable name
-	Description string      // Detailed description
-	Latitude    float64     // GPS latitude
-	Longitude   float64     // GPS longitude
-	Category    string      // Type of location (restaurant, landmark, etc.)
-	Creator     std.Address // Address of the user who added this location
-	CreatedAt   int64       // Unix timestamp
-	VisitCount  int         // Number of check-ins at this location
-	Verified    bool        // Whether location is verified by community
+	ID          string  // Unique identifier
+	Name        string  // Human-readable name
+	Description string  // Detailed description
+	Latitude    float64 // GPS latitude
+	Longitude   float64 // GPS longitude
+	Category    string  // Type of location (restaurant, landmark, etc.)
+	Creator     address // Address of the user who added this location
+	CreatedAt   int64   // Unix timestamp
+	VisitCount  int     // Number of check-ins at this location
+	Verified    bool    // Whether location is verified by community
 }
 
 // LocationManager handles all location-related operations
@@ -38,7 +37,7 @@ func NewLocationManager() *LocationManager {
 }
 
 // AddLocation adds a new location to the system
-func (lm *LocationManager) AddLocation(creator std.Address, name, description string, latitude, longitude float64, category string) *Location {
+func (lm *LocationManager) AddLocation(creator address, name, description string, latitude, longitude float64, category string) *Location {
 	// Validate coordinates
 	if latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180 {
 		panic("Invalid coordinates")
@@ -126,7 +125,7 @@ func (lm *LocationManager) IncrementVisitCount(id string) {
 }
 
 // VerifyLocation marks a location as verified
-func (lm *LocationManager) VerifyLocation(id string, verifier std.Address) bool {
+func (lm *LocationManager) VerifyLocation(id string, verifier address) bool {
 	location := lm.GetLocation(id)
 	if location == nil {
 		return false
