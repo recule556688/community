@@ -151,3 +151,14 @@ func (lm *LocationManager) GetNearbyLocations(latitude, longitude, radiusKm floa
 
 	return nearby
 }
+
+// GetLocationsByCategory returns all locations in a specific category
+func (lm *LocationManager) GetLocationsByCategory(category string) []*Location {
+	byCategory := make([]*Location, 0)
+	for _, location := range lm.locations {
+		if location.Category == category {
+			byCategory = append(byCategory, location)
+		}
+	}
+	return byCategory
+}

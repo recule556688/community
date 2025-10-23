@@ -33,7 +33,7 @@ func TestLocationManager(t *testing.T) {
 	}
 
 	// Test getting locations by user
-	userLocations := locationManager.GetLocationsByUser(creator.String())
+	userLocations := locationManager.GetUserLocations(creator.String())
 	if len(userLocations) != 1 {
 		t.Errorf("Expected 1 location for user, got %d", len(userLocations))
 	}

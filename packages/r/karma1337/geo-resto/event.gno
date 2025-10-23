@@ -16,6 +16,9 @@ const (
 	EventTypeMeetup EventType = iota
 	EventTypeAirdrop
 	EventTypeQuest
+	EventTypeContest
+	EventTypeCheckpoint
+	EventTypeEmergency
 )
 
 // Event represents a location-based event (airdrops, meetups, etc.)
@@ -248,8 +251,8 @@ func (em *EventManager) SetMaxParticipants(eventID string, maxParticipants int, 
 	return true
 }
 
-// IsParticipant checks if a user is a participant in an event
-func (em *EventManager) IsParticipant(eventID, userAddress string) bool {
+// IsUserParticipant checks if a user is a participant in an event
+func (em *EventManager) IsUserParticipant(eventID, userAddress string) bool {
 	event := em.GetEvent(eventID)
 	if event == nil {
 		return false

@@ -90,7 +90,7 @@ func JoinEvent(eventID, password string) string {
 	if !authManager.CheckRateLimit(caller.String(), "join_event:"+eventID, 60) {
 		return "Rate limit exceeded. Please try again later."
 	}
-	success := eventManager.JoinEvent(caller, eventID, password)
+	success := eventManager.JoinEvent(eventID, password, caller)
 	if success {
 		return "Successfully joined event: " + eventID
 	}

@@ -69,13 +69,13 @@ func TestEventJoining(t *testing.T) {
 	user := std.Address("g1user123")
 
 	// Test joining with correct password
-	success := eventManager.JoinEvent(user, event.ID, "password123")
+	success := eventManager.JoinEvent(event.ID, "password123", user)
 	if !success {
 		t.Error("Should be able to join event with correct password")
 	}
 
 	// Test joining with incorrect password
-	success2 := eventManager.JoinEvent(user, event.ID, "wrongpassword")
+	success2 := eventManager.JoinEvent(event.ID, "wrongpassword", user)
 	if success2 {
 		t.Error("Should not be able to join event with incorrect password")
 	}
