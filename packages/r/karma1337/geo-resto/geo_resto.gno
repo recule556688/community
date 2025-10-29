@@ -4,6 +4,8 @@ import (
 	"chain/runtime"
 	"strconv"
 	"strings"
+
+	"gno.land/p/moul/txlink"
 )
 
 var (
@@ -49,6 +51,100 @@ func Render(path string) string {
 	}
 }
 
+// Helper functions for parsing string arguments
+
+// parseFloat converts a string to float64, returns 0 on error
+func parseFloat(s string) float64 {
+	if s == "" {
+		return 0
+	}
+	// Simple float parsing (supports decimal notation)
+	var result float64
+	var decimal float64
+	var isDecimal bool
+	var divisor float64 = 1
+	negative := false
+
+	if s[0] == '-' {
+		negative = true
+		s = s[1:]
+	}
+
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c == '.' {
+			isDecimal = true
+			continue
+		}
+		if c >= '0' && c <= '9' {
+			if isDecimal {
+				decimal = decimal*10 + float64(c-'0')
+				divisor *= 10
+			} else {
+				result = result*10 + float64(c-'0')
+			}
+		}
+	}
+
+	result += decimal / divisor
+	if negative {
+		result = -result
+	}
+	return result
+}
+
+// parseInt converts a string to int, returns 0 on error
+func parseInt(s string) int {
+	if s == "" {
+		return 0
+	}
+	var result int
+	negative := false
+
+	if s[0] == '-' {
+		negative = true
+		s = s[1:]
+	}
+
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c >= '0' && c <= '9' {
+			result = result*10 + int(c-'0')
+		}
+	}
+
+	if negative {
+		result = -result
+	}
+	return result
+}
+
+// parseInt64 converts a string to int64, returns 0 on error
+func parseInt64(s string) int64 {
+	if s == "" {
+		return 0
+	}
+	var result int64
+	negative := false
+
+	if s[0] == '-' {
+		negative = true
+		s = s[1:]
+	}
+
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c >= '0' && c <= '9' {
+			result = result*10 + int64(c-'0')
+		}
+	}
+
+	if negative {
+		result = -result
+	}
+	return result
+}
+
 // Public API Functions
 
 // AddLocation allows adding a new geographic location to the system
@@ -61,17 +157,21 @@ func AddLocation(name, description string, latitude, longitude float64, category
 	return "Location added with ID: " + location.ID
 }
 
-// CheckIn allows a user to check in at a specific location
-func CheckIn(locationID, proof string) string {
+// AddLocationStr is a string-based wrapper for AddLocation (for txlink compatibility)
+// The first parameter (_ realm) is automatically provided by Gno runtime
+func AddLocationStr(_ realm, name, description, latStr, lonStr, category string) string {
+	// Parse latitude and longitude from strings
+	lat := parseFloat(latStr)
+	lon := parseFloat(lonStr)
+	return AddLocation(name, description, lat, lon, category)
+}
+
+// CheckIn records a user's visit to a location with proof of presence
+// The first parameter (_ realm) is automatically provided by Gno runtime
+func CheckIn(_ realm, locationID, proof string) string {
 	caller := runtime.PreviousRealm().Address()
-	if !authManager.CheckRateLimit(caller.String(), "check_in", 60) {
-		return "Rate limit exceeded. Please try again later."
-	}
 	visit := visitManager.CheckIn(caller, locationID, proof)
-	if visit == nil {
-		return "Check-in failed"
-	}
-	return "Successfully checked in at location: " + locationID
+	return "Check-in successful! Visit ID: " + visit.ID
 }
 
 // CreateEvent creates a location-based event (like airdrops)
@@ -84,8 +184,18 @@ func CreateEvent(locationID, name, description, password string, eventType int, 
 	return "Event created with ID: " + event.ID
 }
 
+// CreateEventStr is a string-based wrapper for CreateEvent (for txlink compatibility)
+// The first parameter (_ realm) is automatically provided by Gno runtime
+func CreateEventStr(_ realm, locationID, name, description, password, eventTypeStr, startTimeStr, endTimeStr string) string {
+	eventType := parseInt(eventTypeStr)
+	startTime := parseInt64(startTimeStr)
+	endTime := parseInt64(endTimeStr)
+	return CreateEvent(locationID, name, description, password, eventType, startTime, endTime)
+}
+
 // JoinEvent allows a user to join an event with proper authentication
-func JoinEvent(eventID, password string) string {
+// The first parameter (_ realm) is automatically provided by Gno runtime
+func JoinEvent(_ realm, eventID, password string) string {
 	caller := runtime.PreviousRealm().Address()
 	if !authManager.CheckRateLimit(caller.String(), "join_event:"+eventID, 60) {
 		return "Rate limit exceeded. Please try again later."
@@ -126,4 +236,77 @@ func GetEventStats(eventID string) string {
 // GetLocationChallenge returns a challenge for a specific location
 func GetLocationChallenge(locationID string) string {
 	return authManager.GenerateLocationChallenge(locationID)
+}
+
+// VerifyPresence allows event organizers to verify attendee presence using a verification code
+// The first parameter (_ realm) is automatically provided by Gno runtime
+func VerifyPresence(_ realm, eventID, verificationCode, attendeeAddress string) string {
+	caller := runtime.PreviousRealm().Address()
+	success := eventManager.VerifyAttendeePresence(eventID, verificationCode, caller, attendeeAddress)
+	if success {
+		return "Successfully verified attendee: " + attendeeAddress
+	}
+	return "Failed to verify attendee"
+}
+
+// Transaction Link Helpers - Generate clickable transaction links for wallet integration
+
+// GetAddLocationTxLink generates a transaction link for adding a new location
+func GetAddLocationTxLink(name, description string, latitude, longitude float64, category string) string {
+	return txlink.NewLink("AddLocationStr").
+		AddArgs(
+			"name", name,
+			"description", description,
+			"latStr", strconv.FormatFloat(latitude, 'f', 6, 64),
+			"lonStr", strconv.FormatFloat(longitude, 'f', 6, 64),
+			"category", category,
+		).
+		URL()
+}
+
+// GetCheckInTxLink generates a transaction link for checking in at a location
+func GetCheckInTxLink(locationID, proof string) string {
+	return txlink.NewLink("CheckIn").
+		AddArgs(
+			"locationID", locationID,
+			"proof", proof,
+		).
+		URL()
+}
+
+// GetCreateEventTxLink generates a transaction link for creating an event
+func GetCreateEventTxLink(locationID, name, description, password string, eventType int, startTime, endTime int64) string {
+	return txlink.NewLink("CreateEventStr").
+		AddArgs(
+			"locationID", locationID,
+			"name", name,
+			"description", description,
+			"password", password,
+			"eventTypeStr", strconv.Itoa(eventType),
+			"startTimeStr", strconv.FormatInt(startTime, 10),
+			"endTimeStr", strconv.FormatInt(endTime, 10),
+		).
+		URL()
+}
+
+// GetJoinEventTxLink generates a transaction link for joining an event
+func GetJoinEventTxLink(eventID, password string) string {
+	return txlink.NewLink("JoinEvent").
+		AddArgs(
+			"eventID", eventID,
+			"password", password,
+		).
+		URL()
+}
+
+// GetVerifyPresenceTxLink generates a transaction link for verifying attendee presence (organizer only)
+func GetVerifyPresenceTxLink(eventID, verificationCode, attendeeAddress string) string {
+	// This would be used by event organizers to verify attendee presence
+	return txlink.NewLink("VerifyPresence").
+		AddArgs(
+			"eventID", eventID,
+			"verificationCode", verificationCode,
+			"attendeeAddress", attendeeAddress,
+		).
+		URL()
 }
