@@ -37,6 +37,11 @@ func (r *Renderer) RenderMainPage() string {
 	sb.WriteString("- [Active Events](/r/karma1337/georesto:events)\n")
 	sb.WriteString("- [World Map](/r/karma1337/georesto:map)\n\n")
 
+	// Quick Actions
+	sb.WriteString("## 📲 Quick Actions\n")
+	addLocationLink := GetAddLocationTxLink("", "", 0, 0, "")
+	sb.WriteString("- [➕ Add New Location](" + addLocationLink + ")\n\n")
+
 	// Recent activity
 	sb.WriteString("## 🔥 Recent Activity\n")
 	recentVisits := visitManager.GetRecentVisits(5)
@@ -111,6 +116,16 @@ func (r *Renderer) RenderLocation(locationID string) string {
 		sb.WriteString("**Status**: ⏳ Pending verification\n")
 	}
 	sb.WriteString("\n")
+
+	// Add transaction link for check-in
+	sb.WriteString("## 📲 Actions\n\n")
+	challenge := authManager.GenerateLocationChallenge(locationID)
+	checkInLink := GetCheckInTxLink(locationID, challenge)
+	sb.WriteString("- [🔔 Check In Here](" + checkInLink + ")\n")
+
+	// Add create event link
+	createEventLink := GetCreateEventTxLink(locationID, "", "", "", 0, 0, 0)
+	sb.WriteString("- [🎯 Create Event Here](" + createEventLink + ")\n\n")
 
 	// Recent visits
 	visits := visitManager.GetLocationVisits(locationID)
@@ -245,7 +260,7 @@ func (r *Renderer) RenderEvent(eventID string) string {
 
 	location := locationManager.GetLocation(event.LocationID)
 	if location != nil {
-		sb.WriteString("[" + location.Name + "](/r/karma1337/geo-resto:locations/" + event.LocationID + ")")
+		sb.WriteString("[" + location.Name + "](/r/karma1337/georesto:locations/" + event.LocationID + ")")
 	} else {
 		sb.WriteString(event.LocationID)
 	}
@@ -275,6 +290,13 @@ func (r *Renderer) RenderEvent(eventID string) string {
 	}
 
 	sb.WriteString("\n")
+
+	// Add transaction link for joining event
+	if event.IsActive {
+		sb.WriteString("## 📲 Actions\n\n")
+		joinLink := GetJoinEventTxLink(eventID, "")
+		sb.WriteString("- [🎟️ Join Event](" + joinLink + ")\n\n")
+	}
 
 	// QR Code and Verification Info (for event organizers)
 	sb.WriteString("## 📱 Event Verification\n\n")
@@ -348,7 +370,7 @@ func (r *Renderer) RenderWorldMap() string {
 func (r *Renderer) renderLocationCard(location *Location) string {
 	var sb strings.Builder
 
-	sb.WriteString("### [" + location.Name + "](/r/karma1337/geo-resto:locations/" + location.ID + ")\n")
+	sb.WriteString("### [" + location.Name + "](/r/karma1337/georesto:locations/" + location.ID + ")\n")
 	sb.WriteString(location.Description + "\n\n")
 	sb.WriteString("📍 *" + strconv.FormatFloat(location.Latitude, 'f', 4, 64) + ", " + strconv.FormatFloat(location.Longitude, 'f', 4, 64) + "*")
 	sb.WriteString(" | 👥 " + strconv.Itoa(location.VisitCount) + " visits")
@@ -363,7 +385,7 @@ func (r *Renderer) renderLocationCard(location *Location) string {
 func (r *Renderer) renderEventCard(event *Event) string {
 	var sb strings.Builder
 
-	sb.WriteString("### [" + event.Name + "](/r/karma1337/geo-resto:events/" + event.ID + ")\n")
+	sb.WriteString("### [" + event.Name + "](/r/karma1337/georesto:events/" + event.ID + ")\n")
 	sb.WriteString(event.Description + "\n\n")
 	sb.WriteString("📅 " + r.formatTimestamp(event.StartTime) + " - " + r.formatTimestamp(event.EndTime) + "\n")
 	sb.WriteString("👥 " + strconv.Itoa(len(event.Participants)) + " participants")
