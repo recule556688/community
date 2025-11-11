@@ -223,11 +223,10 @@ func (em *EventManager) getEventIDsForCreator(creatorAddr string) []string {
 
 // GetCreatorEvents returns all events by a specific creator
 func (em *EventManager) GetCreatorEvents(creatorAddress string) []*Event {
-	eventIDs, exists := em.eventsByCreator[creatorAddress]
-	if !exists {
+	eventIDs := em.getEventIDsForCreator(creatorAddress)
+	if len(eventIDs) == 0 {
 		return []*Event{}
 	}
-
 	events := make([]*Event, 0, len(eventIDs))
 	for _, id := range eventIDs {
 		if event := em.GetEvent(id); event != nil {
@@ -291,15 +290,16 @@ func (em *EventManager) updateEventStatus(event *Event) {
 func (em *EventManager) updateActiveEvents() {
 	currentTime := time.Now().Unix()
 	em.activeEvents = make([]string, 0)
-
-	for eventID, event := range em.events {
+	em.events.Iterate("", "", func(key string, value interface{}) bool {
+		event := value.(*Event)
 		if currentTime >= event.StartTime && currentTime <= event.EndTime {
 			event.IsActive = true
-			em.activeEvents = append(em.activeEvents, eventID)
+			em.activeEvents = append(em.activeEvents, key)
 		} else {
 			event.IsActive = false
 		}
-	}
+		return false // continue
+	})
 }
 
 // GetEventTypeString returns the string representation of an event type

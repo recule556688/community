@@ -124,7 +124,7 @@ func (r *Renderer) RenderLocation(locationID string) string {
 	sb.WriteString("- [🔔 Check In Here](" + checkInLink + ")\n")
 
 	// Add create event link
-	createEventLink := GetCreateEventTxLink(locationID, "", "", "", 0, 0, 0)
+	createEventLink := GetCreateEventTxLink(locationID, "", "", 0, 0, 0)
 	sb.WriteString("- [🎯 Create Event Here](" + createEventLink + ")\n\n")
 
 	// Recent visits
@@ -285,16 +285,13 @@ func (r *Renderer) RenderEvent(eventID string) string {
 		sb.WriteString("**Rewards**: " + event.Rewards + "\n")
 	}
 
-	if event.Password != "" {
-		sb.WriteString("**Access**: 🔒 Password required\n")
-	}
 
 	sb.WriteString("\n")
 
 	// Add transaction link for joining event
 	if event.IsActive {
 		sb.WriteString("## 📲 Actions\n\n")
-		joinLink := GetJoinEventTxLink(eventID, "")
+	joinLink := GetJoinEventTxLink(eventID)
 		sb.WriteString("- [🎟️ Join Event](" + joinLink + ")\n\n")
 	}
 

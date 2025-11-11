@@ -175,32 +175,32 @@ func CheckIn(_ realm, locationID, proof string) string {
 }
 
 // CreateEvent creates a location-based event (like airdrops)
-func CreateEvent(locationID, name, description, password string, eventType int, startTime, endTime int64) string {
+func CreateEvent(locationID, name, description string, eventType int, startTime, endTime int64) string {
 	caller := runtime.PreviousRealm().Address()
 	if !authManager.CheckRateLimit(caller.String(), "create_event", 300) { // 5 minute cooldown
 		return "Rate limit exceeded. Please try again later."
 	}
-	event := eventManager.CreateEvent(caller, locationID, name, description, password, eventType, startTime, endTime)
+	event := eventManager.CreateEvent(caller, locationID, name, description, eventType, startTime, endTime)
 	return "Event created with ID: " + event.ID
 }
 
 // CreateEventStr is a string-based wrapper for CreateEvent (for txlink compatibility)
 // The first parameter (_ realm) is automatically provided by Gno runtime
-func CreateEventStr(_ realm, locationID, name, description, password, eventTypeStr, startTimeStr, endTimeStr string) string {
+func CreateEventStr(_ realm, locationID, name, description, eventTypeStr, startTimeStr, endTimeStr string) string {
 	eventType := parseInt(eventTypeStr)
 	startTime := parseInt64(startTimeStr)
 	endTime := parseInt64(endTimeStr)
-	return CreateEvent(locationID, name, description, password, eventType, startTime, endTime)
+	return CreateEvent(locationID, name, description, eventType, startTime, endTime)
 }
 
 // JoinEvent allows a user to join an event with proper authentication
 // The first parameter (_ realm) is automatically provided by Gno runtime
-func JoinEvent(_ realm, eventID, password string) string {
+func JoinEvent(_ realm, eventID string) string {
 	caller := runtime.PreviousRealm().Address()
 	if !authManager.CheckRateLimit(caller.String(), "join_event:"+eventID, 60) {
 		return "Rate limit exceeded. Please try again later."
 	}
-	success := eventManager.JoinEvent(eventID, password, caller)
+	success := eventManager.JoinEvent(eventID, caller)
 	if success {
 		return "Successfully joined event: " + eventID
 	}
@@ -275,13 +275,12 @@ func GetCheckInTxLink(locationID, proof string) string {
 }
 
 // GetCreateEventTxLink generates a transaction link for creating an event
-func GetCreateEventTxLink(locationID, name, description, password string, eventType int, startTime, endTime int64) string {
+func GetCreateEventTxLink(locationID, name, description string, eventType int, startTime, endTime int64) string {
 	return txlink.NewLink("CreateEventStr").
 		AddArgs(
 			"locationID", locationID,
 			"name", name,
 			"description", description,
-			"password", password,
 			"eventTypeStr", strconv.Itoa(eventType),
 			"startTimeStr", strconv.FormatInt(startTime, 10),
 			"endTimeStr", strconv.FormatInt(endTime, 10),
@@ -290,11 +289,10 @@ func GetCreateEventTxLink(locationID, name, description, password string, eventT
 }
 
 // GetJoinEventTxLink generates a transaction link for joining an event
-func GetJoinEventTxLink(eventID, password string) string {
+func GetJoinEventTxLink(eventID string) string {
 	return txlink.NewLink("JoinEvent").
 		AddArgs(
 			"eventID", eventID,
-			"password", password,
 		).
 		URL()
 }

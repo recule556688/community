@@ -108,11 +108,10 @@ func (lm *LocationManager) getUserLocationIDs(userAddr string) []string {
 
 // GetUserLocations returns all locations added by a specific user
 func (lm *LocationManager) GetUserLocations(userAddress string) []*Location {
-	locationIDs, exists := lm.locationsByUser[userAddress]
-	if !exists {
+	locationIDs := lm.getUserLocationIDs(userAddress)
+	if len(locationIDs) == 0 {
 		return []*Location{}
 	}
-
 	locations := make([]*Location, 0, len(locationIDs))
 	for _, id := range locationIDs {
 		if location := lm.GetLocation(id); location != nil {
@@ -124,10 +123,7 @@ func (lm *LocationManager) GetUserLocations(userAddress string) []*Location {
 
 // GetUserLocationCount returns the number of locations added by a user
 func (lm *LocationManager) GetUserLocationCount(userAddress string) int {
-	locationIDs, exists := lm.locationsByUser[userAddress]
-	if !exists {
-		return 0
-	}
+	locationIDs := lm.getUserLocationIDs(userAddress)
 	return len(locationIDs)
 }
 
@@ -154,24 +150,26 @@ func (lm *LocationManager) VerifyLocation(id string, verifier address) bool {
 // GetNearbyLocations returns locations within a given radius using the Haversine formula.
 func (lm *LocationManager) GetNearbyLocations(latitude, longitude, radiusKm float64) []*Location {
 	nearby := make([]*Location, 0)
-
-	for _, location := range lm.locations {
+	lm.locations.Iterate("", "", func(key string, value interface{}) bool {
+		location := value.(*Location)
 		distance := haversine(latitude, longitude, location.Latitude, location.Longitude)
 		if distance <= radiusKm {
 			nearby = append(nearby, location)
 		}
-	}
-
+		return false
+	})
 	return nearby
 }
 
 // GetLocationsByCategory returns all locations in a specific category
 func (lm *LocationManager) GetLocationsByCategory(category string) []*Location {
 	byCategory := make([]*Location, 0)
-	for _, location := range lm.locations {
+	lm.locations.Iterate("", "", func(key string, value interface{}) bool {
+		location := value.(*Location)
 		if location.Category == category {
 			byCategory = append(byCategory, location)
 		}
-	}
+		return false
+	})
 	return byCategory
 }
