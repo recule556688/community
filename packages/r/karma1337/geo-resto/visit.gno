@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"strconv"
 	"time"
+
+	"gno.land/p/nt/avl"
 )
 
 // Visit represents a user's check-in at a location
@@ -21,18 +23,18 @@ type Visit struct {
 
 // VisitManager handles all visit and check-in related operations
 type VisitManager struct {
-	visits           map[string]*Visit   // Visit ID -> Visit
-	visitsByUser     map[string][]string // User address -> Visit IDs
-	visitsByLocation map[string][]string // Location ID -> Visit IDs
+	visits           *avl.Tree // Visit ID -> Visit
+	visitsByUser     *avl.Tree // User address -> []string (Visit IDs)
+	visitsByLocation *avl.Tree // Location ID -> []string (Visit IDs)
 	nextID           int
 }
 
 // NewVisitManager creates a new visit manager instance
 func NewVisitManager() *VisitManager {
 	return &VisitManager{
-		visits:           make(map[string]*Visit),
-		visitsByUser:     make(map[string][]string),
-		visitsByLocation: make(map[string][]string),
+		visits:           avl.NewTree(),
+		visitsByUser:     avl.NewTree(),
+		visitsByLocation: avl.NewTree(),
 		nextID:           1,
 	}
 }
@@ -72,13 +74,17 @@ func (vm *VisitManager) CheckIn(user address, locationID, proof string) *Visit {
 	}
 
 	// Store the visit
-	vm.visits[visitID] = visit
+	vm.visits.Set(visitID, visit)
 
 	// Index by user
-	vm.visitsByUser[userAddr] = append(vm.visitsByUser[userAddr], visitID)
+	userVisits := vm.getUserVisitIDs(userAddr)
+	userVisits = append(userVisits, visitID)
+	vm.visitsByUser.Set(userAddr, userVisits)
 
 	// Index by location
-	vm.visitsByLocation[locationID] = append(vm.visitsByLocation[locationID], visitID)
+	locationVisits := vm.getLocationVisitIDs(locationID)
+	locationVisits = append(locationVisits, visitID)
+	vm.visitsByLocation.Set(locationID, locationVisits)
 
 	// Update location visit count
 	locationManager.IncrementVisitCount(locationID)
@@ -88,17 +94,17 @@ func (vm *VisitManager) CheckIn(user address, locationID, proof string) *Visit {
 
 // GetVisit retrieves a visit by ID
 func (vm *VisitManager) GetVisit(visitID string) *Visit {
-	visit, exists := vm.visits[visitID]
+	visitValue, exists := vm.visits.Get(visitID)
 	if !exists {
 		return nil
 	}
-	return visit
+	return visitValue.(*Visit)
 }
 
 // GetUserVisits returns all visits by a specific user
 func (vm *VisitManager) GetUserVisits(userAddress string) []*Visit {
-	visitIDs, exists := vm.visitsByUser[userAddress]
-	if !exists {
+	visitIDs := vm.getUserVisitIDs(userAddress)
+	if len(visitIDs) == 0 {
 		return []*Visit{}
 	}
 
@@ -113,8 +119,8 @@ func (vm *VisitManager) GetUserVisits(userAddress string) []*Visit {
 
 // GetLocationVisits returns all visits to a specific location
 func (vm *VisitManager) GetLocationVisits(locationID string) []*Visit {
-	visitIDs, exists := vm.visitsByLocation[locationID]
-	if !exists {
+	visitIDs := vm.getLocationVisitIDs(locationID)
+	if len(visitIDs) == 0 {
 		return []*Visit{}
 	}
 
@@ -129,19 +135,17 @@ func (vm *VisitManager) GetLocationVisits(locationID string) []*Visit {
 
 // GetUserVisitCount returns the total number of visits by a user
 func (vm *VisitManager) GetUserVisitCount(userAddress string) int {
-	visitIDs, exists := vm.visitsByUser[userAddress]
-	if !exists {
-		return 0
-	}
+	visitIDs := vm.getUserVisitIDs(userAddress)
 	return len(visitIDs)
 }
 
 // GetRecentVisits returns the most recent visits across all users
 func (vm *VisitManager) GetRecentVisits(limit int) []*Visit {
-	allVisits := make([]*Visit, 0, len(vm.visits))
-	for _, visit := range vm.visits {
-		allVisits = append(allVisits, visit)
-	}
+	allVisits := make([]*Visit, 0)
+	vm.visits.Iterate("", "", func(key string, value interface{}) bool {
+		allVisits = append(allVisits, value.(*Visit))
+		return false // continue iteration
+	})
 
 	// Use a more efficient sorting algorithm (insertion sort)
 	for i := 1; i < len(allVisits); i++ {
@@ -213,4 +217,22 @@ func (vm *VisitManager) AddVisitNotes(visitID, notes string, user address) bool 
 
 	visit.Notes = notes
 	return true
+}
+
+// Helper: getUserVisitIDs retrieves visit IDs for a user
+func (vm *VisitManager) getUserVisitIDs(userAddress string) []string {
+	value, exists := vm.visitsByUser.Get(userAddress)
+	if !exists {
+		return []string{}
+	}
+	return value.([]string)
+}
+
+// Helper: getLocationVisitIDs retrieves visit IDs for a location
+func (vm *VisitManager) getLocationVisitIDs(locationID string) []string {
+	value, exists := vm.visitsByLocation.Get(locationID)
+	if !exists {
+		return []string{}
+	}
+	return value.([]string)
 }
