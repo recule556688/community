@@ -6,65 +6,36 @@ import (
 	"math"
 	"strconv"
 	"time"
+
+	"gno.land/p/nt/avl"
+	"gno.land/p/nt/ownable/exts/authorizable"
 )
 
 // AuthManager handles access control and proof verification
 type AuthManager struct {
-	trustedVerifiers map[string]bool  // Trusted verifier addresses
-	adminAddresses   map[string]bool  // Admin addresses
-	rateLimitTracker map[string]int64 // Tracks last action time for a user and action
-	accessTokens     map[string]int64 // token -> expiration time
+	*authorizable.Authorizable        // Handles admin/verifier authorization
+	rateLimitTracker           *avl.Tree // key (user:action) -> timestamp
+	accessTokens               *avl.Tree // token -> expiration time
 }
 
 // NewAuthManager creates a new authentication manager instance
 func NewAuthManager() *AuthManager {
 	return &AuthManager{
-		trustedVerifiers: make(map[string]bool),
-		adminAddresses:   make(map[string]bool),
-		rateLimitTracker: make(map[string]int64),
-		accessTokens:     make(map[string]int64),
+		Authorizable:     authorizable.NewAuthorizable(),
+		rateLimitTracker: avl.NewTree(),
+		accessTokens:     avl.NewTree(),
 	}
 }
 
-// AddTrustedVerifier adds a trusted verifier address
-func (am *AuthManager) AddTrustedVerifier(verifierAddress string, admin address) bool {
-	if !am.IsAdmin(admin.String()) {
-		return false
-	}
-
-	am.trustedVerifiers[verifierAddress] = true
-	return true
+// IsTrustedVerifier checks if an address is authorized (verifier)
+func (am *AuthManager) IsTrustedVerifier(addr string) bool {
+	return am.Authorizable.PreviousOnAuthList() == nil
 }
 
-// RemoveTrustedVerifier removes a trusted verifier address
-func (am *AuthManager) RemoveTrustedVerifier(verifierAddress string, admin address) bool {
-	if !am.IsAdmin(admin.String()) {
-		return false
-	}
-
-	delete(am.trustedVerifiers, verifierAddress)
-	return true
-}
-
-// IsTrustedVerifier checks if an address is a trusted verifier
-func (am *AuthManager) IsTrustedVerifier(address string) bool {
-	return am.trustedVerifiers[address]
-}
-
-// AddAdmin adds an admin address
-func (am *AuthManager) AddAdmin(adminAddress string, currentAdmin address) bool {
-	// Only existing admins can add new admins
-	if len(am.adminAddresses) > 0 && !am.IsAdmin(currentAdmin.String()) {
-		return false
-	}
-
-	am.adminAddresses[adminAddress] = true
-	return true
-}
-
-// IsAdmin checks if an address is an admin
-func (am *AuthManager) IsAdmin(address string) bool {
-	return am.adminAddresses[address]
+// IsAdmin checks if an address is an admin (owner or authorized)
+func (am *AuthManager) IsAdmin(addr string) bool {
+	addrType := address(addr)
+	return am.Authorizable.Owner() == addrType || am.Authorizable.PreviousOnAuthList() == nil
 }
 
 // VerifyLocationProof verifies a cryptographic proof for location check-in
@@ -77,23 +48,6 @@ func (am *AuthManager) VerifyLocationProof(userAddress, locationID, proof string
 // GenerateLocationProof generates a proof for location check-in
 func (am *AuthManager) GenerateLocationProof(userAddress, locationID string, timestamp int64) string {
 	return am.generateLocationProof(userAddress, locationID, timestamp)
-}
-
-// VerifyEventAccess verifies access to a password-protected event
-func (am *AuthManager) VerifyEventAccess(eventID, password string, user address) bool {
-	event := eventManager.GetEvent(eventID)
-	if event == nil {
-		return false
-	}
-
-	// If no password required, access is granted
-	if event.Password == "" {
-		return true
-	}
-
-	// Verify password
-	hashedPassword := am.hashString(password)
-	return hashedPassword == event.Password
 }
 
 // CanModifyLocation checks if a user can modify a location
@@ -161,25 +115,22 @@ func (am *AuthManager) GenerateAccessToken(userAddress string, expirationTime in
 	data := userAddress + ":" + strconv.FormatInt(expirationTime, 10)
 	hash := sha256.Sum256([]byte(data))
 	token := hex.EncodeToString(hash[:])
-	am.accessTokens[token] = expirationTime
+	am.accessTokens.Set(token, expirationTime)
 	return token
 }
 
 // VerifyAccessToken verifies an access token
 func (am *AuthManager) VerifyAccessToken(token, userAddress string, currentTime int64) bool {
-	expirationTime, exists := am.accessTokens[token]
+	expirationTimeValue, exists := am.accessTokens.Get(token)
 	if !exists {
 		return false // Token does not exist
 	}
 
+	expirationTime := expirationTimeValue.(int64)
 	if currentTime > expirationTime {
-		delete(am.accessTokens, token) // Clean up expired token
-		return false                   // Token has expired
+		am.accessTokens.Remove(token) // Clean up expired token
+		return false                  // Token has expired
 	}
-
-	// Optional: Verify that the token was generated for the correct userAddress.
-	// This would require storing the userAddress with the token or regenerating
-	// the token to check for a match. For now, we'll keep it simple.
 
 	return true
 }
@@ -187,15 +138,18 @@ func (am *AuthManager) VerifyAccessToken(token, userAddress string, currentTime 
 // CheckRateLimit implements basic rate limiting for API calls
 func (am *AuthManager) CheckRateLimit(userAddress string, action string, cooldownSeconds int64) bool {
 	key := userAddress + ":" + action
-	lastActionTime, exists := am.rateLimitTracker[key]
+	lastActionTimeValue, exists := am.rateLimitTracker.Get(key)
 
 	currentTime := time.Now().Unix()
 
-	if exists && (currentTime-lastActionTime) < cooldownSeconds {
-		return false // Rate limit exceeded
+	if exists {
+		lastActionTime := lastActionTimeValue.(int64)
+		if (currentTime - lastActionTime) < cooldownSeconds {
+			return false // Rate limit exceeded
+		}
 	}
 
-	am.rateLimitTracker[key] = currentTime
+	am.rateLimitTracker.Set(key, currentTime)
 	return true
 }
 
