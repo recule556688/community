@@ -20,7 +20,7 @@ func TestQRCodeVerification(t *testing.T) {
 	startTime := currentTime + 60 // Starts in 1 minute (close enough to current time)
 	endTime := currentTime + 7200 // Ends in 2 hours
 
-	event := eventManager.CreateEvent(creator, location.ID, "QR Test Event", "Testing QR verification", "", int(EventTypeMeetup), startTime, endTime)
+	event := eventManager.CreateEvent(creator, location.ID, "QR Test Event", "Testing QR verification", int(EventTypeMeetup), startTime, endTime)
 	if event == nil {
 		t.Fatal("Failed to create event")
 	}
@@ -95,7 +95,6 @@ func TestQRCodeVerification(t *testing.T) {
 	// Add a participant manually (since event might not be active in test)
 	// This simulates what would happen if JoinEvent succeeded
 	event.Participants = append(event.Participants, attendeeAddress)
-	eventManager.events[event.ID] = event // Save changes
 
 	total2, verified2, _ := eventManager.GetAttendeeVerificationStats(event.ID, creator)
 	if total2 != 1 || verified2 != 1 {
@@ -114,7 +113,7 @@ func TestQRCodeTimeSecurity(t *testing.T) {
 	startTime := time.Now().Unix() + 3600
 	endTime := startTime + 7200
 
-	event := eventManager.CreateEvent(creator, location.ID, "Time Security Test", "Testing time-based security", "", int(EventTypeMeetup), startTime, endTime)
+	event := eventManager.CreateEvent(creator, location.ID, "Time Security Test", "Testing time-based security", int(EventTypeMeetup), startTime, endTime)
 
 	// Generate a verification code
 	code1 := eventManager.GenerateAttendeeVerificationCode(event.ID, creator)

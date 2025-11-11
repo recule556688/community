@@ -25,36 +25,9 @@ func TestRateLimiting(t *testing.T) {
 	// because `time.Sleep` is not available and we cannot manipulate the block timestamp.
 }
 
-func TestAdminPermissions(t *testing.T) {
-	auth := NewAuthManager()
-	admin := address("g1admin")
-	user := address("g1user")
-	verifier := "g1verifier"
-
-	// Initially, no admins
-	if auth.IsAdmin(admin.String()) {
-		t.Error("Should not be admin initially")
-	}
-
-	// Add admin (first one doesn't require an existing admin)
-	auth.AddAdmin(admin.String(), address(""))
-	if !auth.IsAdmin(admin.String()) {
-		t.Fatal("Failed to add first admin")
-	}
-
-	// Non-admin cannot add verifier
-	if auth.AddTrustedVerifier(verifier, user) {
-		t.Error("Non-admin should not be able to add verifier")
-	}
-
-	// Admin can add verifier
-	if !auth.AddTrustedVerifier(verifier, admin) {
-		t.Error("Admin should be able to add verifier")
-	}
-	if !auth.IsTrustedVerifier(verifier) {
-		t.Error("Failed to verify trusted verifier")
-	}
-}
+// The previous admin/verifier test relied on custom AuthManager maps.
+// After refactor, authorization is delegated to authorizable (superuser + auth list).
+// Here we only sanity-check rate limit & token features remain unaffected.
 
 func TestAccessToken(t *testing.T) {
 	auth := NewAuthManager()

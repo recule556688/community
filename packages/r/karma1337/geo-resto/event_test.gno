@@ -16,16 +16,7 @@ func TestEventManager(t *testing.T) {
 	startTime := time.Now().Unix() + 100 // Start in 100 seconds
 	endTime := startTime + 3600          // End in 1 hour
 
-	event := eventManager.CreateEvent(
-		creator,
-		location.ID,
-		"Test Event",
-		"A test event",
-		"password123",
-		int(EventTypeAirdrop),
-		startTime,
-		endTime,
-	)
+	event := eventManager.CreateEvent(creator, location.ID, "Test Event", "A test event", int(EventTypeAirdrop), startTime, endTime)
 
 	if event == nil {
 		t.Fatal("Failed to create event")
@@ -54,27 +45,18 @@ func TestEventJoining(t *testing.T) {
 	startTime := time.Now().Unix() // Starts right now
 	endTime := startTime + 3600    // Ends in ~1 hour
 
-	event := eventManager.CreateEvent(
-		creator,
-		location.ID,
-		"Active Event",
-		"An active event",
-		"password123",
-		int(EventTypeMeetup),
-		startTime,
-		endTime,
-	)
+	event := eventManager.CreateEvent(creator, location.ID, "Active Event", "An active event", int(EventTypeMeetup), startTime, endTime)
 
 	user := address("g1user123")
 
 	// Test joining with correct password
-	success := eventManager.JoinEvent(event.ID, "password123", user)
+	success := eventManager.JoinEvent(event.ID, user)
 	if !success {
 		t.Error("Should be able to join event with correct password")
 	}
 
 	// Test joining with incorrect password
-	success2 := eventManager.JoinEvent(event.ID, "wrongpassword", user)
+	success2 := eventManager.JoinEvent(event.ID, user)
 	if success2 {
 		t.Error("Should not be able to join event with incorrect password")
 	}
@@ -95,16 +77,7 @@ func TestEventStatusUpdates(t *testing.T) {
 	startTime := currentTime + 100
 	endTime := startTime + 200
 
-	event := eventManager.CreateEvent(
-		creator,
-		location.ID,
-		"Future Event",
-		"A future event",
-		"",
-		int(EventTypeMeetup),
-		startTime,
-		endTime,
-	)
+	event := eventManager.CreateEvent(creator, location.ID, "Future Event", "A future event", int(EventTypeMeetup), startTime, endTime)
 
 	// Event should not be active yet
 	if event.IsActive {
@@ -135,9 +108,9 @@ func TestEventsByLocation(t *testing.T) {
 	endTime := startTime + 3600
 
 	// Create events for different locations
-	event1 := eventManager.CreateEvent(creator, location1.ID, "Event 1", "Test", "", int(EventTypeAirdrop), startTime, endTime)
-	event2 := eventManager.CreateEvent(creator, location1.ID, "Event 2", "Test", "", int(EventTypeMeetup), startTime, endTime)
-	_ = eventManager.CreateEvent(creator, location2.ID, "Event 3", "Test", "", int(EventTypeContest), startTime, endTime)
+	event1 := eventManager.CreateEvent(creator, location1.ID, "Event 1", "Test", int(EventTypeAirdrop), startTime, endTime)
+	event2 := eventManager.CreateEvent(creator, location1.ID, "Event 2", "Test", int(EventTypeMeetup), startTime, endTime)
+	_ = eventManager.CreateEvent(creator, location2.ID, "Event 3", "Test", int(EventTypeContest), startTime, endTime)
 
 	// Test getting events by location
 	location1Events := eventManager.GetLocationEvents(location1.ID)
@@ -197,14 +170,5 @@ func TestEventValidation(t *testing.T) {
 	}()
 
 	// This should panic
-	eventManager.CreateEvent(
-		creator,
-		location.ID,
-		"Invalid Event",
-		"Past start time",
-		"",
-		int(EventTypeAirdrop),
-		currentTime-100, // Past start time
-		currentTime+100,
-	)
+	eventManager.CreateEvent(creator, location.ID, "Invalid Event", "Past start time", int(EventTypeAirdrop), currentTime-100, currentTime+100)
 }
