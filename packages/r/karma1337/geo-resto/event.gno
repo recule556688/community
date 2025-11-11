@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"gno.land/p/nt/avl"
 )
 
 // EventType defines the type of location-based event
@@ -28,7 +30,6 @@ type Event struct {
 	Name               string    // Event name
 	Description        string    // Event description
 	EventType          EventType // Type of event
-	Password           string    // Access password (hashed)
 	StartTime          int64     // Event start timestamp
 	EndTime            int64     // Event end timestamp
 	CreatedAt          int64     // Creation timestamp
@@ -43,26 +44,26 @@ type Event struct {
 
 // EventManager handles all event-related operations
 type EventManager struct {
-	events           map[string]*Event   // Event ID -> Event
-	eventsByLocation map[string][]string // Location ID -> Event IDs
-	eventsByCreator  map[string][]string // Creator address -> Event IDs
-	activeEvents     []string            // Currently active event IDs
+	events           *avl.Tree // Event ID -> Event
+	eventsByLocation *avl.Tree // Location ID -> []string (Event IDs)
+	eventsByCreator  *avl.Tree // Creator address -> []string (Event IDs)
+	activeEvents     []string  // Currently active event IDs
 	nextID           int
 }
 
 // NewEventManager creates a new event manager instance
 func NewEventManager() *EventManager {
 	return &EventManager{
-		events:           make(map[string]*Event),
-		eventsByLocation: make(map[string][]string),
-		eventsByCreator:  make(map[string][]string),
+		events:           avl.NewTree(),
+		eventsByLocation: avl.NewTree(),
+		eventsByCreator:  avl.NewTree(),
 		activeEvents:     make([]string, 0),
 		nextID:           1,
 	}
 }
 
-// CreateEvent creates a new event
-func (em *EventManager) CreateEvent(creator address, locationID, name, description, password string, eventType int, startTime, endTime int64) *Event {
+// CreateEvent creates a new event (password removed for security)
+func (em *EventManager) CreateEvent(creator address, locationID, name, description string, eventType int, startTime, endTime int64) *Event {
 	// Verify the location exists
 	location := locationManager.GetLocation(locationID)
 	if location == nil {
@@ -87,12 +88,6 @@ func (em *EventManager) CreateEvent(creator address, locationID, name, descripti
 	eventID := "event_" + strconv.Itoa(em.nextID)
 	em.nextID++
 
-	// Hash the password for security
-	hashedPassword := ""
-	if password != "" {
-		hashedPassword = em.hashPassword(password)
-	}
-
 	// Generate verification secret for QR codes
 	verificationSecret := em.generateVerificationSecret(eventID, creator.String())
 
@@ -106,7 +101,6 @@ func (em *EventManager) CreateEvent(creator address, locationID, name, descripti
 		Name:               strings.TrimSpace(name),
 		Description:        strings.TrimSpace(description),
 		EventType:          EventType(eventType),
-		Password:           hashedPassword,
 		StartTime:          startTime,
 		EndTime:            endTime,
 		CreatedAt:          currentTime,
@@ -120,14 +114,18 @@ func (em *EventManager) CreateEvent(creator address, locationID, name, descripti
 	}
 
 	// Store the event
-	em.events[eventID] = event
+	em.events.Set(eventID, event)
 
 	// Index by location
-	em.eventsByLocation[locationID] = append(em.eventsByLocation[locationID], eventID)
+	locationEvents := em.getEventIDsForLocation(locationID)
+	locationEvents = append(locationEvents, eventID)
+	em.eventsByLocation.Set(locationID, locationEvents)
 
 	// Index by creator
 	creatorAddr := creator.String()
-	em.eventsByCreator[creatorAddr] = append(em.eventsByCreator[creatorAddr], eventID)
+	creatorEvents := em.getEventIDsForCreator(creatorAddr)
+	creatorEvents = append(creatorEvents, eventID)
+	em.eventsByCreator.Set(creatorAddr, creatorEvents)
 
 	// Activate event if it should start now
 	em.updateEventStatus(event)
@@ -136,7 +134,7 @@ func (em *EventManager) CreateEvent(creator address, locationID, name, descripti
 }
 
 // JoinEvent allows a user to join an event
-func (em *EventManager) JoinEvent(eventID, password string, user address) bool {
+func (em *EventManager) JoinEvent(eventID string, user address) bool {
 	event := em.GetEvent(eventID)
 	if event == nil {
 		return false
@@ -146,13 +144,6 @@ func (em *EventManager) JoinEvent(eventID, password string, user address) bool {
 	em.updateEventStatus(event)
 	if !event.IsActive {
 		return false
-	}
-
-	// Verify password if required
-	if event.Password != "" {
-		if !em.verifyPassword(password, event.Password) {
-			return false
-		}
 	}
 
 	userAddr := user.String()
@@ -176,11 +167,11 @@ func (em *EventManager) JoinEvent(eventID, password string, user address) bool {
 
 // GetEvent retrieves an event by ID
 func (em *EventManager) GetEvent(eventID string) *Event {
-	event, exists := em.events[eventID]
+	eventValue, exists := em.events.Get(eventID)
 	if !exists {
 		return nil
 	}
-	return event
+	return eventValue.(*Event)
 }
 
 // GetActiveEvents returns all currently active events
@@ -198,8 +189,8 @@ func (em *EventManager) GetActiveEvents() []*Event {
 
 // GetLocationEvents returns all events for a specific location
 func (em *EventManager) GetLocationEvents(locationID string) []*Event {
-	eventIDs, exists := em.eventsByLocation[locationID]
-	if !exists {
+	eventIDs := em.getEventIDsForLocation(locationID)
+	if len(eventIDs) == 0 {
 		return []*Event{}
 	}
 
@@ -210,6 +201,24 @@ func (em *EventManager) GetLocationEvents(locationID string) []*Event {
 		}
 	}
 	return events
+}
+
+// Helper: getEventIDsForLocation retrieves event IDs for a location
+func (em *EventManager) getEventIDsForLocation(locationID string) []string {
+	value, exists := em.eventsByLocation.Get(locationID)
+	if !exists {
+		return []string{}
+	}
+	return value.([]string)
+}
+
+// Helper: getEventIDsForCreator retrieves event IDs for a creator
+func (em *EventManager) getEventIDsForCreator(creatorAddr string) []string {
+	value, exists := em.eventsByCreator.Get(creatorAddr)
+	if !exists {
+		return []string{}
+	}
+	return value.([]string)
 }
 
 // GetCreatorEvents returns all events by a specific creator
@@ -291,17 +300,6 @@ func (em *EventManager) updateActiveEvents() {
 			event.IsActive = false
 		}
 	}
-}
-
-// hashPassword hashes a password using SHA256
-func (em *EventManager) hashPassword(password string) string {
-	hash := sha256.Sum256([]byte(password))
-	return hex.EncodeToString(hash[:])
-}
-
-// verifyPassword verifies a password against a hash
-func (em *EventManager) verifyPassword(password, hash string) bool {
-	return em.hashPassword(password) == hash
 }
 
 // GetEventTypeString returns the string representation of an event type
