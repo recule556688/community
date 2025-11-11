@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"gno.land/p/nt/avl"
 )
 
 // Location represents a geographic point with metadata
@@ -22,16 +24,16 @@ type Location struct {
 
 // LocationManager handles all location-related operations
 type LocationManager struct {
-	locations       map[string]*Location // ID -> Location
-	locationsByUser map[string][]string  // User address -> Location IDs
+	locations       *avl.Tree // ID -> Location
+	locationsByUser *avl.Tree // User address -> []string (Location IDs)
 	nextID          int
 }
 
 // NewLocationManager creates a new location manager instance
 func NewLocationManager() *LocationManager {
 	return &LocationManager{
-		locations:       make(map[string]*Location),
-		locationsByUser: make(map[string][]string),
+		locations:       avl.NewTree(),
+		locationsByUser: avl.NewTree(),
 		nextID:          1,
 	}
 }
@@ -65,31 +67,43 @@ func (lm *LocationManager) AddLocation(creator address, name, description string
 		Verified:    false,
 	}
 
-	lm.locations[id] = location
+	lm.locations.Set(id, location)
 
 	// Track locations by user
 	userAddr := creator.String()
-	lm.locationsByUser[userAddr] = append(lm.locationsByUser[userAddr], id)
+	userLocations := lm.getUserLocationIDs(userAddr)
+	userLocations = append(userLocations, id)
+	lm.locationsByUser.Set(userAddr, userLocations)
 
 	return location
 }
 
 // GetLocation retrieves a location by its ID
 func (lm *LocationManager) GetLocation(id string) *Location {
-	location, exists := lm.locations[id]
+	locationValue, exists := lm.locations.Get(id)
 	if !exists {
 		return nil
 	}
-	return location
+	return locationValue.(*Location)
 }
 
 // GetAllLocations returns all locations
 func (lm *LocationManager) GetAllLocations() []*Location {
-	all := make([]*Location, 0, len(lm.locations))
-	for _, location := range lm.locations {
-		all = append(all, location)
-	}
+	all := make([]*Location, 0)
+	lm.locations.Iterate("", "", func(key string, value interface{}) bool {
+		all = append(all, value.(*Location))
+		return false // continue iteration
+	})
 	return all
+}
+
+// Helper: getUserLocationIDs retrieves location IDs for a user
+func (lm *LocationManager) getUserLocationIDs(userAddr string) []string {
+	value, exists := lm.locationsByUser.Get(userAddr)
+	if !exists {
+		return []string{}
+	}
+	return value.([]string)
 }
 
 // GetUserLocations returns all locations added by a specific user
