@@ -13,7 +13,7 @@ import (
 
 // AuthManager handles access control and proof verification
 type AuthManager struct {
-	*authorizable.Authorizable        // Handles admin/verifier authorization
+	*authorizable.Authorizable           // Handles admin/verifier authorization
 	rateLimitTracker           *avl.Tree // key (user:action) -> timestamp
 	accessTokens               *avl.Tree // token -> expiration time
 }

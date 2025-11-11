@@ -285,13 +285,12 @@ func (r *Renderer) RenderEvent(eventID string) string {
 		sb.WriteString("**Rewards**: " + event.Rewards + "\n")
 	}
 
-
 	sb.WriteString("\n")
 
 	// Add transaction link for joining event
 	if event.IsActive {
 		sb.WriteString("## 📲 Actions\n\n")
-	joinLink := GetJoinEventTxLink(eventID)
+		joinLink := GetJoinEventTxLink(eventID)
 		sb.WriteString("- [🎟️ Join Event](" + joinLink + ")\n\n")
 	}
 
