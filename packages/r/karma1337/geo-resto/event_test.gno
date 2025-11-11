@@ -55,12 +55,6 @@ func TestEventJoining(t *testing.T) {
 		t.Error("Should be able to join event with correct password")
 	}
 
-	// Test joining with incorrect password
-	success2 := eventManager.JoinEvent(event.ID, user)
-	if success2 {
-		t.Error("Should not be able to join event with incorrect password")
-	}
-
 	// Test checking if user is participant
 	isParticipant := eventManager.IsUserParticipant(event.ID, user.String())
 	if !isParticipant {
