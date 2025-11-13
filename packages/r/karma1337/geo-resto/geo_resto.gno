@@ -154,6 +154,9 @@ func AddLocation(name, description string, latitude, longitude float64, category
 		return "Rate limit exceeded. Please try again later."
 	}
 	location := locationManager.AddLocation(caller, name, description, latitude, longitude, category)
+	if location == nil {
+		return "Failed to add location"
+	}
 	return "Location added with ID: " + location.ID
 }
 
@@ -171,6 +174,9 @@ func AddLocationStr(_ realm, name, description, latStr, lonStr, category string)
 func CheckIn(_ realm, locationID, proof string) string {
 	caller := runtime.PreviousRealm().Address()
 	visit := visitManager.CheckIn(caller, locationID, proof)
+	if visit == nil {
+		return "Failed to check-in"
+	}
 	return "Check-in successful! Visit ID: " + visit.ID
 }
 
@@ -181,6 +187,9 @@ func CreateEvent(locationID, name, description string, eventType int, startTime,
 		return "Rate limit exceeded. Please try again later."
 	}
 	event := eventManager.CreateEvent(caller, locationID, name, description, eventType, startTime, endTime)
+	if event == nil {
+		return "Failed to create event"
+	}
 	return "Event created with ID: " + event.ID
 }
 

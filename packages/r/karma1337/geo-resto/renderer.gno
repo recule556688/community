@@ -40,7 +40,13 @@ func (r *Renderer) RenderMainPage() string {
 	// Quick Actions
 	sb.WriteString("## 📲 Quick Actions\n")
 	addLocationLink := GetAddLocationTxLink("", "", 0, 0, "")
+	checkInLink := GetCheckInTxLink("", "")
 	sb.WriteString("- [➕ Add New Location](" + addLocationLink + ")\n\n")
+	sb.WriteString("- [🔔 Check In to a Location](" + checkInLink + ")\n\n")
+
+	// Quick create event (user will fill details in wallet UI)
+	createEventGenericLink := GetCreateEventTxLink("", "", "", 0, 0, 0)
+	sb.WriteString("- [🎯 Create Event](" + createEventGenericLink + ")\n\n")
 
 	// Recent activity
 	sb.WriteString("## 🔥 Recent Activity\n")
@@ -297,6 +303,10 @@ func (r *Renderer) RenderEvent(eventID string) string {
 	// QR Code and Verification Info (for event organizers)
 	sb.WriteString("## 📱 Event Verification\n\n")
 	sb.WriteString("**QR Code**: `" + event.QRCode + "`\n\n")
+
+	// Organizer-only: Generate a Verify Attendee tx link (organizers use this to verify attendees)
+	verifyLink := GetVerifyPresenceTxLink(event.ID, "", "")
+	sb.WriteString("- [✅ Verify Attendee (organizer)](" + verifyLink + ")\n\n")
 
 	// Verification Statistics
 	totalParticipants := len(event.Participants)
