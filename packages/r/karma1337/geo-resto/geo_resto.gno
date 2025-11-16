@@ -258,6 +258,26 @@ func VerifyPresence(_ realm, eventID, verificationCode, attendeeAddress string) 
 	return "Failed to verify attendee"
 }
 
+// AddTrustedVerifier allows the realm owner to add a trusted verifier (organizer)
+func AddTrustedVerifierStr(_ realm, addr string) string {
+	caller := runtime.PreviousRealm().Address()
+	success := authManager.AddTrustedVerifier(addr, caller)
+	if success {
+		return "Added trusted verifier: " + addr
+	}
+	return "Failed to add trusted verifier (owner only)"
+}
+
+// RemoveTrustedVerifier allows the realm owner to remove a trusted verifier
+func RemoveTrustedVerifierStr(_ realm, addr string) string {
+	caller := runtime.PreviousRealm().Address()
+	success := authManager.RemoveTrustedVerifier(addr, caller)
+	if success {
+		return "Removed trusted verifier: " + addr
+	}
+	return "Failed to remove trusted verifier (owner only)"
+}
+
 // Transaction Link Helpers - Generate clickable transaction links for wallet integration
 
 // GetAddLocationTxLink generates a transaction link for adding a new location
@@ -314,6 +334,24 @@ func GetVerifyPresenceTxLink(eventID, verificationCode, attendeeAddress string) 
 			"eventID", eventID,
 			"verificationCode", verificationCode,
 			"attendeeAddress", attendeeAddress,
+		).
+		URL()
+}
+
+// GetAddTrustedVerifierTxLink generates a transaction link for adding a trusted verifier
+func GetAddTrustedVerifierTxLink(addr string) string {
+	return txlink.NewLink("AddTrustedVerifierStr").
+		AddArgs(
+			"addr", addr,
+		).
+		URL()
+}
+
+// GetRemoveTrustedVerifierTxLink generates a transaction link for removing a trusted verifier
+func GetRemoveTrustedVerifierTxLink(addr string) string {
+	return txlink.NewLink("RemoveTrustedVerifierStr").
+		AddArgs(
+			"addr", addr,
 		).
 		URL()
 }

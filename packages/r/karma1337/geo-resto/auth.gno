@@ -16,6 +16,7 @@ type AuthManager struct {
 	*authorizable.Authorizable           // Handles admin/verifier authorization
 	rateLimitTracker           *avl.Tree // key (user:action) -> timestamp
 	accessTokens               *avl.Tree // token -> expiration time
+	Authorized                 *avl.Tree // address -> bool (trusted verifiers)
 }
 
 // NewAuthManager creates a new authentication manager instance
@@ -24,18 +25,46 @@ func NewAuthManager() *AuthManager {
 		Authorizable:     authorizable.NewAuthorizable(),
 		rateLimitTracker: avl.NewTree(),
 		accessTokens:     avl.NewTree(),
+		Authorized:       avl.NewTree(),
 	}
 }
 
 // IsTrustedVerifier checks if an address is authorized (verifier)
 func (am *AuthManager) IsTrustedVerifier(addr string) bool {
-	return am.Authorizable.PreviousOnAuthList() == nil
+	v, ok := am.Authorized.Get(addr)
+	if !ok {
+		return false
+	}
+	return v.(bool)
+}
+
+// AddTrustedVerifier allows the owner to add an address as a trusted verifier
+func (am *AuthManager) AddTrustedVerifier(addr string, caller address) bool {
+	// Try to add via the external authorizable extension. That extension
+	// enforces owner-only access internally; we call it and mirror the
+	// change locally so we can query membership efficiently.
+	err := am.Authorizable.AddToAuthList(address(addr))
+	if err != nil {
+		return false
+	}
+	am.Authorized.Set(addr, true)
+	return true
+}
+
+// RemoveTrustedVerifier allows the owner to remove a trusted verifier
+func (am *AuthManager) RemoveTrustedVerifier(addr string, caller address) bool {
+	err := am.Authorizable.DeleteFromAuthList(address(addr))
+	if err != nil {
+		return false
+	}
+	am.Authorized.Remove(addr)
+	return true
 }
 
 // IsAdmin checks if an address is an admin (owner or authorized)
 func (am *AuthManager) IsAdmin(addr string) bool {
 	addrType := address(addr)
-	return am.Authorizable.Owner() == addrType || am.Authorizable.PreviousOnAuthList() == nil
+	return am.Authorizable.Owner() == addrType
 }
 
 // VerifyLocationProof verifies a cryptographic proof for location check-in
@@ -68,12 +97,10 @@ func (am *AuthManager) CanModifyLocation(locationID string, user address) bool {
 	if am.IsAdmin(userAddr) {
 		return true
 	}
-
 	// Trusted verifiers can modify for verification purposes
 	if am.IsTrustedVerifier(userAddr) {
 		return true
 	}
-
 	return false
 }
 
