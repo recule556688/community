@@ -40,9 +40,12 @@ func (am *AuthManager) IsTrustedVerifier(addr string) bool {
 
 // AddTrustedVerifier allows the owner to add an address as a trusted verifier
 func (am *AuthManager) AddTrustedVerifier(addr string, caller address) bool {
-	// Try to add via the external authorizable extension. That extension
-	// enforces owner-only access internally; we call it and mirror the
-	// change locally so we can query membership efficiently.
+	// Owner-only check
+	if am.Authorizable.Owner() != caller {
+		return false
+	}
+
+	// Add via the authorizable extension and mirror locally.
 	err := am.Authorizable.AddToAuthList(address(addr))
 	if err != nil {
 		return false
@@ -53,6 +56,11 @@ func (am *AuthManager) AddTrustedVerifier(addr string, caller address) bool {
 
 // RemoveTrustedVerifier allows the owner to remove a trusted verifier
 func (am *AuthManager) RemoveTrustedVerifier(addr string, caller address) bool {
+	// Owner-only check
+	if am.Authorizable.Owner() != caller {
+		return false
+	}
+
 	err := am.Authorizable.DeleteFromAuthList(address(addr))
 	if err != nil {
 		return false
