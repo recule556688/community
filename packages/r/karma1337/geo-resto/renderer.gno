@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"chain/runtime"
 )
 
 // Renderer handles the display and formatting of geographic data for web interface
@@ -47,6 +49,16 @@ func (r *Renderer) RenderMainPage() string {
 	// Quick create event (user will fill details in wallet UI)
 	createEventGenericLink := GetCreateEventTxLink("", "", "", 0, 0, 0)
 	sb.WriteString("- [🎯 Create Event](" + createEventGenericLink + ")\n\n")
+
+	// Owner-only actions: add/remove trusted verifiers
+	// Use runtime.PreviousRealm() to detect the current caller for the web UI.
+	caller := runtime.PreviousRealm().Address()
+	if authManager.IsAdmin(caller.String()) {
+		addTrusted := GetAddTrustedVerifierTxLink("")
+		removeTrusted := GetRemoveTrustedVerifierTxLink("")
+		sb.WriteString("- [🔐 Add Trusted Verifier](" + addTrusted + ") (owner only)\n\n")
+		sb.WriteString("- [🔓 Remove Trusted Verifier](" + removeTrusted + ") (owner only)\n\n")
+	}
 
 	// Recent activity
 	sb.WriteString("## 🔥 Recent Activity\n")
@@ -307,6 +319,15 @@ func (r *Renderer) RenderEvent(eventID string) string {
 	// Organizer-only: Generate a Verify Attendee tx link (organizers use this to verify attendees)
 	verifyLink := GetVerifyPresenceTxLink(event.ID, "", "")
 	sb.WriteString("- [✅ Verify Attendee (organizer)](" + verifyLink + ")\n\n")
+
+	// Owner-only: add/remove trusted verifier links (prefill target addr with owner as a convenience)
+	caller := runtime.PreviousRealm().Address()
+	if authManager.IsAdmin(caller.String()) {
+		addTrusted := GetAddTrustedVerifierTxLink(caller.String())
+		removeTrusted := GetRemoveTrustedVerifierTxLink(caller.String())
+		sb.WriteString("- [🔐 Add Trusted Verifier](" + addTrusted + ") (owner only)\n\n")
+		sb.WriteString("- [🔓 Remove Trusted Verifier](" + removeTrusted + ") (owner only)\n\n")
+	}
 
 	// Verification Statistics
 	totalParticipants := len(event.Participants)
