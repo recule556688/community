@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"chain/runtime"
+
+	"gno.land/r/sys/users"
 )
 
 // Renderer handles the display and formatting of geographic data for web interface
@@ -69,7 +71,7 @@ func (r *Renderer) RenderMainPage() string {
 		for _, visit := range recentVisits {
 			location := locationManager.GetLocation(visit.LocationID)
 			if location != nil {
-				sb.WriteString("- " + r.truncateAddress(visit.UserAddress) + " visited **" + location.Name + "** " + r.timeAgo(visit.Timestamp) + "\n")
+				sb.WriteString("- " + r.resolveName(visit.UserAddress) + " visited **" + location.Name + "** " + r.timeAgo(visit.Timestamp) + "\n")
 			}
 		}
 	}
@@ -125,7 +127,7 @@ func (r *Renderer) RenderLocation(locationID string) string {
 	sb.WriteString("**Description**: " + location.Description + "\n")
 	sb.WriteString("**Category**: " + location.Category + "\n")
 	sb.WriteString("**Coordinates**: " + strconv.FormatFloat(location.Latitude, 'f', 6, 64) + ", " + strconv.FormatFloat(location.Longitude, 'f', 6, 64) + "\n")
-	sb.WriteString("**Created by**: " + r.truncateAddress(location.Creator.String()) + "\n")
+	sb.WriteString("**Created by**: " + r.resolveName(location.Creator.String()) + "\n")
 	sb.WriteString("**Created**: " + r.formatTimestamp(location.CreatedAt) + "\n")
 	sb.WriteString("**Total Visits**: " + strconv.Itoa(location.VisitCount) + "\n")
 	if location.Verified {
@@ -160,7 +162,7 @@ func (r *Renderer) RenderLocation(locationID string) string {
 
 		for i := len(visits) - limit; i < len(visits); i++ {
 			visit := visits[i]
-			sb.WriteString("- " + r.truncateAddress(visit.UserAddress) + " - " + r.formatTimestamp(visit.Timestamp))
+			sb.WriteString("- " + r.resolveName(visit.UserAddress) + " - " + r.formatTimestamp(visit.Timestamp))
 			if visit.Verified {
 				sb.WriteString(" ✅")
 			}
@@ -184,7 +186,7 @@ func (r *Renderer) RenderLocation(locationID string) string {
 func (r *Renderer) RenderUserVisits(userAddress string) string {
 	var sb strings.Builder
 
-	sb.WriteString("# 👤 User Visits: " + r.truncateAddress(userAddress) + "\n\n")
+	sb.WriteString("# 👤 User Visits: " + r.resolveName(userAddress) + "\n\n")
 
 	visits := visitManager.GetUserVisits(userAddress)
 	if len(visits) == 0 {
@@ -230,7 +232,7 @@ func (r *Renderer) RenderRecentVisits() string {
 	for _, visit := range visits {
 		location := locationManager.GetLocation(visit.LocationID)
 		if location != nil {
-			sb.WriteString("- **" + location.Name + "** visited by " + r.truncateAddress(visit.UserAddress) + " " + r.timeAgo(visit.Timestamp))
+			sb.WriteString("- **" + location.Name + "** visited by " + r.resolveName(visit.UserAddress) + " " + r.timeAgo(visit.Timestamp))
 			if visit.Verified {
 				sb.WriteString(" ✅")
 			}
@@ -284,7 +286,7 @@ func (r *Renderer) RenderEvent(eventID string) string {
 	}
 	sb.WriteString("\n")
 
-	sb.WriteString("**Created by**: " + r.truncateAddress(event.Creator.String()) + "\n")
+	sb.WriteString("**Created by**: " + r.resolveName(event.Creator.String()) + "\n")
 	sb.WriteString("**Start Time**: " + r.formatTimestamp(event.StartTime) + "\n")
 	sb.WriteString("**End Time**: " + r.formatTimestamp(event.EndTime) + "\n")
 	sb.WriteString("**Participants**: " + strconv.Itoa(len(event.Participants)))
@@ -342,7 +344,7 @@ func (r *Renderer) RenderEvent(eventID string) string {
 	if len(event.VerifiedAttendees) > 0 {
 		sb.WriteString("### ✅ Verified Attendees\n\n")
 		for _, attendee := range event.VerifiedAttendees {
-			sb.WriteString("- " + r.truncateAddress(attendee) + "\n")
+			sb.WriteString("- " + r.resolveName(attendee) + "\n")
 		}
 		sb.WriteString("\n")
 	}
@@ -353,7 +355,7 @@ func (r *Renderer) RenderEvent(eventID string) string {
 	if len(event.Participants) > 0 {
 		sb.WriteString("## 👥 Participants\n\n")
 		for i, participant := range event.Participants {
-			sb.WriteString(strconv.Itoa(i+1) + ". " + r.truncateAddress(participant) + "\n")
+			sb.WriteString(strconv.Itoa(i+1) + ". " + r.resolveName(participant) + "\n")
 		}
 	}
 
@@ -429,6 +431,20 @@ func (r *Renderer) truncateAddress(address string) string {
 		return address
 	}
 	return address[:6] + "..." + address[len(address)-6:]
+}
+
+func (r *Renderer) resolveName(addr string) string {
+	// Try to resolve a human-readable username for the given address.
+	data := users.ResolveAddress(address(addr))
+	if data != nil {
+		name := data.Name()
+		if name != "" {
+			return name
+		}
+	}
+	// If no username is registered, return the full address so users can
+	// identify or copy it for registration. Previously we truncated here.
+	return addr
 }
 
 func (r *Renderer) formatTimestamp(timestamp int64) string {
