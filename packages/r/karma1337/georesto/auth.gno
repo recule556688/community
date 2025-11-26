@@ -1,20 +1,19 @@
 package georesto
 
 import (
-	"std"
 	"crypto/sha256"
 	"encoding/hex"
+	"math"
 	"strconv"
 	"time"
-	"math"
 )
 
 // AuthManager handles access control and proof verification
 type AuthManager struct {
-	trustedVerifiers map[string]bool // Trusted verifier addresses
-	adminAddresses   map[string]bool // Admin addresses
-	rateLimitTracker map[string]int64  // Tracks last action time for a user and action
-	accessTokens     map[string]int64  // token -> expiration time
+	trustedVerifiers map[string]bool  // Trusted verifier addresses
+	adminAddresses   map[string]bool  // Admin addresses
+	rateLimitTracker map[string]int64 // Tracks last action time for a user and action
+	accessTokens     map[string]int64 // token -> expiration time
 }
 
 // NewAuthManager creates a new authentication manager instance
@@ -28,21 +27,21 @@ func NewAuthManager() *AuthManager {
 }
 
 // AddTrustedVerifier adds a trusted verifier address
-func (am *AuthManager) AddTrustedVerifier(verifierAddress string, admin std.Address) bool {
+func (am *AuthManager) AddTrustedVerifier(verifierAddress string, admin address) bool {
 	if !am.IsAdmin(admin.String()) {
 		return false
 	}
-	
+
 	am.trustedVerifiers[verifierAddress] = true
 	return true
 }
 
 // RemoveTrustedVerifier removes a trusted verifier address
-func (am *AuthManager) RemoveTrustedVerifier(verifierAddress string, admin std.Address) bool {
+func (am *AuthManager) RemoveTrustedVerifier(verifierAddress string, admin address) bool {
 	if !am.IsAdmin(admin.String()) {
 		return false
 	}
-	
+
 	delete(am.trustedVerifiers, verifierAddress)
 	return true
 }
@@ -53,12 +52,12 @@ func (am *AuthManager) IsTrustedVerifier(address string) bool {
 }
 
 // AddAdmin adds an admin address
-func (am *AuthManager) AddAdmin(adminAddress string, currentAdmin std.Address) bool {
+func (am *AuthManager) AddAdmin(adminAddress string, currentAdmin address) bool {
 	// Only existing admins can add new admins
 	if len(am.adminAddresses) > 0 && !am.IsAdmin(currentAdmin.String()) {
 		return false
 	}
-	
+
 	am.adminAddresses[adminAddress] = true
 	return true
 }
@@ -81,68 +80,68 @@ func (am *AuthManager) GenerateLocationProof(userAddress, locationID string, tim
 }
 
 // VerifyEventAccess verifies access to a password-protected event
-func (am *AuthManager) VerifyEventAccess(eventID, password string, user std.Address) bool {
+func (am *AuthManager) VerifyEventAccess(eventID, password string, user address) bool {
 	event := eventManager.GetEvent(eventID)
 	if event == nil {
 		return false
 	}
-	
+
 	// If no password required, access is granted
 	if event.Password == "" {
 		return true
 	}
-	
+
 	// Verify password
 	hashedPassword := am.hashString(password)
 	return hashedPassword == event.Password
 }
 
 // CanModifyLocation checks if a user can modify a location
-func (am *AuthManager) CanModifyLocation(locationID string, user std.Address) bool {
+func (am *AuthManager) CanModifyLocation(locationID string, user address) bool {
 	location := locationManager.GetLocation(locationID)
 	if location == nil {
 		return false
 	}
-	
+
 	userAddr := user.String()
-	
+
 	// Location creator can always modify
 	if location.Creator.String() == userAddr {
 		return true
 	}
-	
+
 	// Admins can modify any location
 	if am.IsAdmin(userAddr) {
 		return true
 	}
-	
+
 	// Trusted verifiers can modify for verification purposes
 	if am.IsTrustedVerifier(userAddr) {
 		return true
 	}
-	
+
 	return false
 }
 
 // CanModifyEvent checks if a user can modify an event
-func (am *AuthManager) CanModifyEvent(eventID string, user std.Address) bool {
+func (am *AuthManager) CanModifyEvent(eventID string, user address) bool {
 	event := eventManager.GetEvent(eventID)
 	if event == nil {
 		return false
 	}
-	
+
 	userAddr := user.String()
-	
+
 	// Event creator can always modify
 	if event.Creator.String() == userAddr {
 		return true
 	}
-	
+
 	// Admins can modify any event
 	if am.IsAdmin(userAddr) {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -175,7 +174,7 @@ func (am *AuthManager) VerifyAccessToken(token, userAddress string, currentTime 
 
 	if currentTime > expirationTime {
 		delete(am.accessTokens, token) // Clean up expired token
-		return false                 // Token has expired
+		return false                   // Token has expired
 	}
 
 	// Optional: Verify that the token was generated for the correct userAddress.
@@ -189,13 +188,13 @@ func (am *AuthManager) VerifyAccessToken(token, userAddress string, currentTime 
 func (am *AuthManager) CheckRateLimit(userAddress string, action string, cooldownSeconds int64) bool {
 	key := userAddress + ":" + action
 	lastActionTime, exists := am.rateLimitTracker[key]
-	
+
 	currentTime := time.Now().Unix()
-	
+
 	if exists && (currentTime-lastActionTime) < cooldownSeconds {
 		return false // Rate limit exceeded
 	}
-	
+
 	am.rateLimitTracker[key] = currentTime
 	return true
 }
@@ -234,35 +233,35 @@ func (am *AuthManager) GenerateLocationChallenge(locationID string) string {
 func (am *AuthManager) VerifyLocationChallenge(locationID, response string) bool {
 	// Check if response matches any of the last few time windows (for clock drift tolerance)
 	currentTime := time.Now().Unix()
-	
+
 	for i := 0; i < 3; i++ { // Check current and previous 2 windows
 		timeWindow := (currentTime / 300) - int64(i)
 		data := locationID + ":" + strconv.FormatInt(timeWindow, 10)
 		hash := sha256.Sum256([]byte(data))
 		expectedResponse := hex.EncodeToString(hash[:8])
-		
+
 		if response == expectedResponse {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 // haversine calculates the distance between two points on Earth.
 func haversine(lat1, lon1, lat2, lon2 float64) float64 {
 	const R = 6371 // Earth radius in kilometers
-	
+
 	dLat := (lat2 - lat1) * (math.Pi / 180.0)
 	dLon := (lon2 - lon1) * (math.Pi / 180.0)
-	
+
 	lat1Rad := lat1 * (math.Pi / 180.0)
 	lat2Rad := lat2 * (math.Pi / 180.0)
-	
+
 	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
 		math.Cos(lat1Rad)*math.Cos(lat2Rad)*
 			math.Sin(dLon/2)*math.Sin(dLon/2)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	
+
 	return R * c
 }

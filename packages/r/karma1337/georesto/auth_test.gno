@@ -1,7 +1,6 @@
 package georesto
 
 import (
-	"std"
 	"testing"
 	"time" // time.Sleep is not available in Gno
 )
@@ -28,8 +27,8 @@ func TestRateLimiting(t *testing.T) {
 
 func TestAdminPermissions(t *testing.T) {
 	auth := NewAuthManager()
-	admin := std.Address("g1admin")
-	user := std.Address("g1user")
+	admin := address("g1admin")
+	user := address("g1user")
 	verifier := "g1verifier"
 
 	// Initially, no admins
@@ -38,7 +37,7 @@ func TestAdminPermissions(t *testing.T) {
 	}
 
 	// Add admin (first one doesn't require an existing admin)
-	auth.AddAdmin(admin.String(), std.Address(""))
+	auth.AddAdmin(admin.String(), address(""))
 	if !auth.IsAdmin(admin.String()) {
 		t.Fatal("Failed to add first admin")
 	}

@@ -1,7 +1,6 @@
 package georesto
 
 import (
-	"std"
 	"crypto/sha256"
 	"encoding/hex"
 	"strconv"
@@ -22,28 +21,28 @@ const (
 
 // Event represents a location-based event (airdrops, meetups, etc.)
 type Event struct {
-	ID           string      // Unique event identifier
-	LocationID   string      // Associated location ID
-	Creator      std.Address // Event creator
-	Name         string      // Event name
-	Description  string      // Event description
-	EventType    EventType   // Type of event
-	Password     string      // Access password (hashed)
-	StartTime    int64       // Event start timestamp
-	EndTime      int64       // Event end timestamp
-	CreatedAt    int64       // Creation timestamp
-	Participants []string    // List of participant addresses
-	MaxParticipants int      // Maximum number of participants (0 = unlimited)
-	IsActive     bool        // Whether the event is currently active
-	Rewards      string      // Description of rewards/airdrops
-	QRCode       string      // QR code data for event verification
-	VerificationSecret string // Secret key for generating verification codes
-	VerifiedAttendees []string // List of verified attendee addresses
+	ID                 string    // Unique event identifier
+	LocationID         string    // Associated location ID
+	Creator            address   // Event creator
+	Name               string    // Event name
+	Description        string    // Event description
+	EventType          EventType // Type of event
+	Password           string    // Access password (hashed)
+	StartTime          int64     // Event start timestamp
+	EndTime            int64     // Event end timestamp
+	CreatedAt          int64     // Creation timestamp
+	Participants       []string  // List of participant addresses
+	MaxParticipants    int       // Maximum number of participants (0 = unlimited)
+	IsActive           bool      // Whether the event is currently active
+	Rewards            string    // Description of rewards/airdrops
+	QRCode             string    // QR code data for event verification
+	VerificationSecret string    // Secret key for generating verification codes
+	VerifiedAttendees  []string  // List of verified attendee addresses
 }
 
 // EventManager handles all event-related operations
 type EventManager struct {
-	events          map[string]*Event   // Event ID -> Event
+	events           map[string]*Event   // Event ID -> Event
 	eventsByLocation map[string][]string // Location ID -> Event IDs
 	eventsByCreator  map[string][]string // Creator address -> Event IDs
 	activeEvents     []string            // Currently active event IDs
@@ -62,13 +61,13 @@ func NewEventManager() *EventManager {
 }
 
 // CreateEvent creates a new location-based event
-func (em *EventManager) CreateEvent(creator std.Address, locationID, name, description, password string, eventType int, startTime, endTime int64) *Event {
+func (em *EventManager) CreateEvent(creator address, locationID, name, description, password string, eventType int, startTime, endTime int64) *Event {
 	// Verify the location exists
 	location := locationManager.GetLocation(locationID)
 	if location == nil {
 		panic("Location does not exist")
 	}
-	
+
 	// Validate event times
 	currentTime := time.Now().Unix()
 	if startTime < currentTime {
@@ -77,98 +76,98 @@ func (em *EventManager) CreateEvent(creator std.Address, locationID, name, descr
 	if endTime <= startTime {
 		panic("Event end time must be after start time")
 	}
-	
+
 	// Validate required fields
 	if strings.TrimSpace(name) == "" {
 		panic("Event name is required")
 	}
-	
+
 	// Generate unique event ID
 	eventID := "event_" + strconv.Itoa(em.nextID)
 	em.nextID++
-	
+
 	// Hash the password for security
 	hashedPassword := ""
 	if password != "" {
 		hashedPassword = em.hashPassword(password)
 	}
-	
+
 	// Generate verification secret for QR codes
 	verificationSecret := em.generateVerificationSecret(eventID, creator.String())
-	
+
 	// Generate QR code data (contains event ID and verification info)
 	qrData := em.generateQRCode(eventID, verificationSecret)
-	
+
 	event := &Event{
-		ID:              eventID,
-		LocationID:      locationID,
-		Creator:         creator,
-		Name:            strings.TrimSpace(name),
-		Description:     strings.TrimSpace(description),
-		EventType:       EventType(eventType),
-		Password:        hashedPassword,
-		StartTime:       startTime,
-		EndTime:         endTime,
-		CreatedAt:       currentTime,
-		Participants:    make([]string, 0),
-		MaxParticipants: 0, // Unlimited by default
-		IsActive:        false,
-		Rewards:         "",
-		QRCode:          qrData,
+		ID:                 eventID,
+		LocationID:         locationID,
+		Creator:            creator,
+		Name:               strings.TrimSpace(name),
+		Description:        strings.TrimSpace(description),
+		EventType:          EventType(eventType),
+		Password:           hashedPassword,
+		StartTime:          startTime,
+		EndTime:            endTime,
+		CreatedAt:          currentTime,
+		Participants:       make([]string, 0),
+		MaxParticipants:    0, // Unlimited by default
+		IsActive:           false,
+		Rewards:            "",
+		QRCode:             qrData,
 		VerificationSecret: verificationSecret,
-		VerifiedAttendees: make([]string, 0),
+		VerifiedAttendees:  make([]string, 0),
 	}
-	
+
 	// Store the event
 	em.events[eventID] = event
-	
+
 	// Index by location
 	em.eventsByLocation[locationID] = append(em.eventsByLocation[locationID], eventID)
-	
+
 	// Index by creator
 	creatorAddr := creator.String()
 	em.eventsByCreator[creatorAddr] = append(em.eventsByCreator[creatorAddr], eventID)
-	
+
 	// Activate event if it should start now
 	em.updateEventStatus(event)
-	
+
 	return event
 }
 
 // JoinEvent allows a user to join an event with proper authentication
-func (em *EventManager) JoinEvent(user std.Address, eventID, password string) bool {
+func (em *EventManager) JoinEvent(user address, eventID, password string) bool {
 	event := em.GetEvent(eventID)
 	if event == nil {
 		return false
 	}
-	
+
 	// Check if event is active
 	em.updateEventStatus(event)
 	if !event.IsActive {
 		return false
 	}
-	
+
 	// Verify password if required
 	if event.Password != "" {
 		if !em.verifyPassword(password, event.Password) {
 			return false
 		}
 	}
-	
+
 	userAddr := user.String()
-	
+
 	// Check if user is already a participant
 	for _, participant := range event.Participants {
 		if participant == userAddr {
 			return true // Already joined
 		}
 	}
-	
+
 	// Check participant limit
 	if event.MaxParticipants > 0 && len(event.Participants) >= event.MaxParticipants {
 		return false
 	}
-	
+
 	// Add user to participants
 	event.Participants = append(event.Participants, userAddr)
 	return true
@@ -186,7 +185,7 @@ func (em *EventManager) GetEvent(eventID string) *Event {
 // GetActiveEvents returns all currently active events
 func (em *EventManager) GetActiveEvents() []*Event {
 	em.updateActiveEvents()
-	
+
 	events := make([]*Event, 0, len(em.activeEvents))
 	for _, eventID := range em.activeEvents {
 		if event := em.GetEvent(eventID); event != nil {
@@ -202,7 +201,7 @@ func (em *EventManager) GetLocationEvents(locationID string) []*Event {
 	if !exists {
 		return []*Event{}
 	}
-	
+
 	events := make([]*Event, 0, len(eventIDs))
 	for _, id := range eventIDs {
 		if event := em.GetEvent(id); event != nil {
@@ -219,7 +218,7 @@ func (em *EventManager) GetUserEvents(userAddress string) []*Event {
 	if !exists {
 		return []*Event{}
 	}
-	
+
 	events := make([]*Event, 0, len(eventIDs))
 	for _, id := range eventIDs {
 		if event := em.GetEvent(id); event != nil {
@@ -231,23 +230,23 @@ func (em *EventManager) GetUserEvents(userAddress string) []*Event {
 }
 
 // SetEventRewards sets the rewards description for an event
-func (em *EventManager) SetEventRewards(eventID, rewards string, user std.Address) bool {
+func (em *EventManager) SetEventRewards(eventID, rewards string, user address) bool {
 	event := em.GetEvent(eventID)
 	if event == nil || event.Creator.String() != user.String() {
 		return false
 	}
-	
+
 	event.Rewards = rewards
 	return true
 }
 
 // SetMaxParticipants sets the maximum number of participants for an event
-func (em *EventManager) SetMaxParticipants(eventID string, maxParticipants int, user std.Address) bool {
+func (em *EventManager) SetMaxParticipants(eventID string, maxParticipants int, user address) bool {
 	event := em.GetEvent(eventID)
 	if event == nil || event.Creator.String() != user.String() {
 		return false
 	}
-	
+
 	event.MaxParticipants = maxParticipants
 	return true
 }
@@ -258,7 +257,7 @@ func (em *EventManager) IsUserParticipant(eventID, userAddress string) bool {
 	if event == nil {
 		return false
 	}
-	
+
 	for _, participant := range event.Participants {
 		if participant == userAddress {
 			return true
@@ -271,9 +270,9 @@ func (em *EventManager) IsUserParticipant(eventID, userAddress string) bool {
 func (em *EventManager) updateEventStatus(event *Event) {
 	currentTime := time.Now().Unix()
 	wasActive := event.IsActive
-	
+
 	event.IsActive = currentTime >= event.StartTime && currentTime <= event.EndTime
-	
+
 	// Update active events list if status changed
 	if wasActive != event.IsActive {
 		em.updateActiveEvents()
@@ -284,7 +283,7 @@ func (em *EventManager) updateEventStatus(event *Event) {
 func (em *EventManager) updateActiveEvents() {
 	currentTime := time.Now().Unix()
 	em.activeEvents = make([]string, 0)
-	
+
 	for eventID, event := range em.events {
 		if currentTime >= event.StartTime && currentTime <= event.EndTime {
 			event.IsActive = true
@@ -341,17 +340,17 @@ func (em *EventManager) generateQRCode(eventID, verificationSecret string) strin
 }
 
 // GenerateAttendeeVerificationCode creates a verification code for an attendee
-func (em *EventManager) GenerateAttendeeVerificationCode(eventID string, attendeeAddress std.Address) string {
+func (em *EventManager) GenerateAttendeeVerificationCode(eventID string, attendeeAddress address) string {
 	event := em.events[eventID]
 	if event == nil {
 		return ""
 	}
-	
+
 	// Only the event creator can generate verification codes
 	if event.Creator.String() != attendeeAddress.String() {
 		return ""
 	}
-	
+
 	// Generate verification code using event secret and current timestamp
 	timestamp := strconv.Itoa(int(time.Now().Unix()))
 	data := eventID + ":" + event.VerificationSecret + ":" + timestamp
@@ -360,17 +359,17 @@ func (em *EventManager) GenerateAttendeeVerificationCode(eventID string, attende
 }
 
 // VerifyAttendeePresence verifies an attendee using their verification code
-func (em *EventManager) VerifyAttendeePresence(eventID, verificationCode string, organizerAddress std.Address, attendeeAddress string) bool {
+func (em *EventManager) VerifyAttendeePresence(eventID, verificationCode string, organizerAddress address, attendeeAddress string) bool {
 	event := em.events[eventID]
 	if event == nil {
 		return false
 	}
-	
+
 	// Only the event creator/organizer can verify attendees
 	if event.Creator.String() != organizerAddress.String() {
 		return false
 	}
-	
+
 	// Check if the verification code is valid (generated within last 5 minutes)
 	currentTime := time.Now().Unix()
 	for i := 0; i < 5; i++ { // Check last 5 minutes
@@ -378,7 +377,7 @@ func (em *EventManager) VerifyAttendeePresence(eventID, verificationCode string,
 		expectedData := eventID + ":" + event.VerificationSecret + ":" + strconv.Itoa(int(checkTime))
 		hash := sha256.Sum256([]byte(expectedData))
 		expectedCode := hex.EncodeToString(hash[:])[:12]
-		
+
 		if verificationCode == expectedCode {
 			// Add to verified attendees if not already verified
 			for _, verified := range event.VerifiedAttendees {
@@ -390,59 +389,59 @@ func (em *EventManager) VerifyAttendeePresence(eventID, verificationCode string,
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 // GetEventQRCode returns the QR code for an event (only for event creator)
-func (em *EventManager) GetEventQRCode(eventID string, requesterAddress std.Address) string {
+func (em *EventManager) GetEventQRCode(eventID string, requesterAddress address) string {
 	event := em.events[eventID]
 	if event == nil {
 		return ""
 	}
-	
+
 	// Only the event creator can access the QR code
 	if event.Creator.String() != requesterAddress.String() {
 		return ""
 	}
-	
+
 	return event.QRCode
 }
 
 // GetVerifiedAttendees returns the list of verified attendees for an event
-func (em *EventManager) GetVerifiedAttendees(eventID string, requesterAddress std.Address) []string {
+func (em *EventManager) GetVerifiedAttendees(eventID string, requesterAddress address) []string {
 	event := em.events[eventID]
 	if event == nil {
 		return []string{}
 	}
-	
+
 	// Only the event creator can see verified attendees
 	if event.Creator.String() != requesterAddress.String() {
 		return []string{}
 	}
-	
+
 	return event.VerifiedAttendees
 }
 
 // GetAttendeeVerificationStats returns verification statistics for an event
-func (em *EventManager) GetAttendeeVerificationStats(eventID string, requesterAddress std.Address) (int, int, float64) {
+func (em *EventManager) GetAttendeeVerificationStats(eventID string, requesterAddress address) (int, int, float64) {
 	event := em.events[eventID]
 	if event == nil {
 		return 0, 0, 0.0
 	}
-	
+
 	// Only the event creator can see stats
 	if event.Creator.String() != requesterAddress.String() {
 		return 0, 0, 0.0
 	}
-	
+
 	totalParticipants := len(event.Participants)
 	verifiedAttendees := len(event.VerifiedAttendees)
 	verificationRate := 0.0
-	
+
 	if totalParticipants > 0 {
 		verificationRate = float64(verifiedAttendees) / float64(totalParticipants) * 100.0
 	}
-	
+
 	return totalParticipants, verifiedAttendees, verificationRate
 }

@@ -1,7 +1,6 @@
 package georesto
 
 import (
-	"std"
 	"crypto/sha256"
 	"encoding/hex"
 	"strconv"
@@ -10,22 +9,22 @@ import (
 
 // Visit represents a user's check-in at a location
 type Visit struct {
-	ID         string      // Unique visit identifier
-	UserAddress string     // Address of the user who visited
-	LocationID string      // ID of the visited location
-	Timestamp  int64       // Unix timestamp of the visit
-	Proof      string      // Cryptographic proof or verification data
-	ProofHash  string      // Hash of the proof for integrity
-	Verified   bool        // Whether the visit has been verified
-	Notes      string      // Optional notes about the visit
+	ID          string // Unique visit identifier
+	UserAddress string // Address of the user who visited
+	LocationID  string // ID of the visited location
+	Timestamp   int64  // Unix timestamp of the visit
+	Proof       string // Cryptographic proof or verification data
+	ProofHash   string // Hash of the proof for integrity
+	Verified    bool   // Whether the visit has been verified
+	Notes       string // Optional notes about the visit
 }
 
 // VisitManager handles all visit and check-in related operations
 type VisitManager struct {
-	visits         map[string]*Visit   // Visit ID -> Visit
-	visitsByUser   map[string][]string // User address -> Visit IDs
+	visits           map[string]*Visit   // Visit ID -> Visit
+	visitsByUser     map[string][]string // User address -> Visit IDs
 	visitsByLocation map[string][]string // Location ID -> Visit IDs
-	nextID         int
+	nextID           int
 }
 
 // NewVisitManager creates a new visit manager instance
@@ -39,28 +38,28 @@ func NewVisitManager() *VisitManager {
 }
 
 // CheckIn records a user's visit to a location
-func (vm *VisitManager) CheckIn(user std.Address, locationID, proof string) *Visit {
+func (vm *VisitManager) CheckIn(user address, locationID, proof string) *Visit {
 	// Verify the location exists
 	location := locationManager.GetLocation(locationID)
 	if location == nil {
 		return nil
 	}
-	
+
 	userAddr := user.String()
 	currentTime := time.Now().Unix()
-	
+
 	// Check for duplicate recent check-ins (prevent spam)
 	if vm.hasRecentCheckIn(userAddr, locationID, currentTime, 3600) { // 1 hour cooldown
 		return nil
 	}
-	
+
 	// Generate unique visit ID
 	visitID := "visit_" + strconv.Itoa(vm.nextID)
 	vm.nextID++
-	
+
 	// Create proof hash for integrity
 	proofHash := vm.generateProofHash(userAddr, locationID, proof, currentTime)
-	
+
 	visit := &Visit{
 		ID:          visitID,
 		UserAddress: userAddr,
@@ -71,19 +70,19 @@ func (vm *VisitManager) CheckIn(user std.Address, locationID, proof string) *Vis
 		Verified:    vm.verifyProof(proof, userAddr, locationID),
 		Notes:       "",
 	}
-	
+
 	// Store the visit
 	vm.visits[visitID] = visit
-	
+
 	// Index by user
 	vm.visitsByUser[userAddr] = append(vm.visitsByUser[userAddr], visitID)
-	
+
 	// Index by location
 	vm.visitsByLocation[locationID] = append(vm.visitsByLocation[locationID], visitID)
-	
+
 	// Update location visit count
 	locationManager.IncrementVisitCount(locationID)
-	
+
 	return visit
 }
 
@@ -102,7 +101,7 @@ func (vm *VisitManager) GetUserVisits(userAddress string) []*Visit {
 	if !exists {
 		return []*Visit{}
 	}
-	
+
 	visits := make([]*Visit, 0, len(visitIDs))
 	for _, id := range visitIDs {
 		if visit := vm.GetVisit(id); visit != nil {
@@ -118,7 +117,7 @@ func (vm *VisitManager) GetLocationVisits(locationID string) []*Visit {
 	if !exists {
 		return []*Visit{}
 	}
-	
+
 	visits := make([]*Visit, 0, len(visitIDs))
 	for _, id := range visitIDs {
 		if visit := vm.GetVisit(id); visit != nil {
@@ -143,7 +142,7 @@ func (vm *VisitManager) GetRecentVisits(limit int) []*Visit {
 	for _, visit := range vm.visits {
 		allVisits = append(allVisits, visit)
 	}
-	
+
 	// Use a more efficient sorting algorithm (insertion sort)
 	for i := 1; i < len(allVisits); i++ {
 		j := i
@@ -152,7 +151,7 @@ func (vm *VisitManager) GetRecentVisits(limit int) []*Visit {
 			j--
 		}
 	}
-	
+
 	if limit > 0 && limit < len(allVisits) {
 		return allVisits[:limit]
 	}
@@ -162,7 +161,7 @@ func (vm *VisitManager) GetRecentVisits(limit int) []*Visit {
 // VerifyVisit provides cryptographic verification that a visit occurred
 func (vm *VisitManager) VerifyVisit(userAddress, locationID string, timestamp int64) bool {
 	userVisits := vm.GetUserVisits(userAddress)
-	
+
 	for _, visit := range userVisits {
 		if visit.LocationID == locationID && visit.Timestamp == timestamp {
 			return visit.Verified
@@ -174,7 +173,7 @@ func (vm *VisitManager) VerifyVisit(userAddress, locationID string, timestamp in
 // hasRecentCheckIn checks if user has checked in recently to prevent spam
 func (vm *VisitManager) hasRecentCheckIn(userAddress, locationID string, currentTime int64, cooldownSeconds int64) bool {
 	userVisits := vm.GetUserVisits(userAddress)
-	
+
 	for _, visit := range userVisits {
 		if visit.LocationID == locationID {
 			timeDiff := currentTime - visit.Timestamp
@@ -200,18 +199,18 @@ func (vm *VisitManager) verifyProof(proof, userAddress, locationID string) bool 
 	// 2. QR code validation
 	// 3. Time-based tokens
 	// 4. Cryptographic signatures
-	
+
 	// We now use the challenge-response mechanism from authManager
 	return authManager.VerifyLocationChallenge(locationID, proof)
 }
 
 // AddVisitNotes allows adding notes to an existing visit
-func (vm *VisitManager) AddVisitNotes(visitID, notes string, user std.Address) bool {
+func (vm *VisitManager) AddVisitNotes(visitID, notes string, user address) bool {
 	visit := vm.GetVisit(visitID)
 	if visit == nil || visit.UserAddress != user.String() {
 		return false
 	}
-	
+
 	visit.Notes = notes
 	return true
 }

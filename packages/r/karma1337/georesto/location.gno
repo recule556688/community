@@ -1,7 +1,6 @@
 package georesto
 
 import (
-	"std"
 	"strconv"
 	"strings"
 	"time"
@@ -15,7 +14,7 @@ type Location struct {
 	Latitude    float64 // GPS latitude
 	Longitude   float64 // GPS longitude
 	Category    string  // Type of location (restaurant, landmark, etc.)
-	Creator     std.Address // Address of the user who added this location
+	Creator     address // Address of the user who added this location
 	CreatedAt   int64   // Unix timestamp
 	VisitCount  int     // Number of check-ins at this location
 	Verified    bool    // Whether location is verified by community
@@ -23,9 +22,9 @@ type Location struct {
 
 // LocationManager handles all location-related operations
 type LocationManager struct {
-	locations     map[string]*Location // ID -> Location
-	locationsByUser map[string][]string // User address -> Location IDs
-	nextID        int
+	locations       map[string]*Location // ID -> Location
+	locationsByUser map[string][]string  // User address -> Location IDs
+	nextID          int
 }
 
 // NewLocationManager creates a new location manager instance
@@ -38,21 +37,21 @@ func NewLocationManager() *LocationManager {
 }
 
 // AddLocation adds a new location to the system
-func (lm *LocationManager) AddLocation(creator std.Address, name, description string, latitude, longitude float64, category string) *Location {
+func (lm *LocationManager) AddLocation(creator address, name, description string, latitude, longitude float64, category string) *Location {
 	// Validate coordinates
 	if latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180 {
 		panic("Invalid coordinates")
 	}
-	
+
 	// Validate required fields
 	if strings.TrimSpace(name) == "" {
 		panic("Location name is required")
 	}
-	
+
 	// Generate unique ID
 	id := "loc_" + strconv.Itoa(lm.nextID)
 	lm.nextID++
-	
+
 	location := &Location{
 		ID:          id,
 		Name:        strings.TrimSpace(name),
@@ -65,13 +64,13 @@ func (lm *LocationManager) AddLocation(creator std.Address, name, description st
 		VisitCount:  0,
 		Verified:    false,
 	}
-	
+
 	lm.locations[id] = location
-	
+
 	// Track locations by user
 	userAddr := creator.String()
 	lm.locationsByUser[userAddr] = append(lm.locationsByUser[userAddr], id)
-	
+
 	return location
 }
 
@@ -99,7 +98,7 @@ func (lm *LocationManager) GetLocationsByUser(userAddress string) []*Location {
 	if !exists {
 		return []*Location{}
 	}
-	
+
 	locations := make([]*Location, 0, len(locationIDs))
 	for _, id := range locationIDs {
 		if location := lm.GetLocation(id); location != nil {
@@ -137,12 +136,12 @@ func (lm *LocationManager) GetUserLocationCount(userAddress string) int {
 }
 
 // VerifyLocation marks a location as verified (community consensus mechanism)
-func (lm *LocationManager) VerifyLocation(locationID string, verifier std.Address) bool {
+func (lm *LocationManager) VerifyLocation(locationID string, verifier address) bool {
 	location := lm.GetLocation(locationID)
 	if location == nil {
 		return false
 	}
-	
+
 	// Simple verification - in a real system, this would involve community voting
 	// or trusted verifier addresses
 	location.Verified = true
@@ -152,13 +151,13 @@ func (lm *LocationManager) VerifyLocation(locationID string, verifier std.Addres
 // GetNearbyLocations returns locations within a given radius using the Haversine formula.
 func (lm *LocationManager) GetNearbyLocations(latitude, longitude, radiusKm float64) []*Location {
 	nearby := make([]*Location, 0)
-	
+
 	for _, location := range lm.locations {
 		distance := haversine(latitude, longitude, location.Latitude, location.Longitude)
 		if distance <= radiusKm {
 			nearby = append(nearby, location)
 		}
 	}
-	
+
 	return nearby
 }
